@@ -1,5 +1,6 @@
 
 
+
 import React, { useState } from 'react';
 
 const AgentCreationForm = ({ onAgentCreated }) => {
@@ -14,10 +15,12 @@ const AgentCreationForm = ({ onAgentCreated }) => {
     setIsLoading(true);
 
     try {
+      const token = localStorage.getItem('token');
       const response = await fetch('http://localhost:5002/api/agents', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
         },
         body: JSON.stringify({ name: agentName, role: agentRole }),
       });
@@ -75,4 +78,5 @@ const AgentCreationForm = ({ onAgentCreated }) => {
 };
 
 export default AgentCreationForm;
+
 

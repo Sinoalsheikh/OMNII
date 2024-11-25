@@ -1,4 +1,5 @@
 
+
 import React, { useState, useEffect } from 'react';
 
 const AgentList = () => {
@@ -12,7 +13,12 @@ const AgentList = () => {
 
   const fetchAgents = async () => {
     try {
-      const response = await fetch('http://localhost:5002/api/agents');
+      const token = localStorage.getItem('token');
+      const response = await fetch('http://localhost:5002/api/agents', {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
       if (!response.ok) {
         throw new Error('Failed to fetch agents');
       }
@@ -53,3 +59,4 @@ const AgentList = () => {
 };
 
 export default AgentList;
+

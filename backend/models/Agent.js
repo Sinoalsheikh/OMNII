@@ -1,4 +1,5 @@
 
+
 const mongoose = require('mongoose');
 
 const AgentSchema = new mongoose.Schema({
@@ -12,6 +13,11 @@ const AgentSchema = new mongoose.Schema({
     required: true,
     trim: true
   },
+  user: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User',
+    required: true
+  },
   createdAt: {
     type: Date,
     default: Date.now
@@ -19,3 +25,4 @@ const AgentSchema = new mongoose.Schema({
 });
 
 module.exports = mongoose.model('Agent', AgentSchema);
+
