@@ -5,6 +5,7 @@
 
 
 
+
 import React, { useState, useEffect } from 'react';
 import { BrowserRouter as Router, Route, Switch, Link } from 'react-router-dom';
 import logo from './logo.svg';
@@ -14,6 +15,7 @@ import AgentList from './components/AgentList';
 import Auth from './components/Auth';
 import ForgotPassword from './components/ForgotPassword';
 import ResetPassword from './components/ResetPassword';
+import VerifyEmail from './components/VerifyEmail';
 
 function App() {
   const [message, setMessage] = useState('');
@@ -70,6 +72,7 @@ function App() {
           ) : (
             <nav>
               <Link to="/login">Login</Link> | 
+              <Link to="/register">Register</Link> | 
               <Link to="/forgot-password">Forgot Password</Link>
             </nav>
           )}
@@ -79,11 +82,17 @@ function App() {
             <Route path="/login">
               <Auth onLogin={handleLogin} />
             </Route>
+            <Route path="/register">
+              <Auth onLogin={handleLogin} isRegister={true} />
+            </Route>
             <Route path="/forgot-password">
               <ForgotPassword />
             </Route>
             <Route path="/reset-password/:resetToken">
               <ResetPassword />
+            </Route>
+            <Route path="/verify-email/:token">
+              <VerifyEmail />
             </Route>
             {isLoggedIn && (
               <>
@@ -105,6 +114,7 @@ function App() {
 }
 
 export default App;
+
 
 
 

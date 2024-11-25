@@ -1,6 +1,7 @@
 
 
 
+
 const mongoose = require('mongoose');
 const bcrypt = require('bcryptjs');
 
@@ -29,6 +30,12 @@ const UserSchema = new mongoose.Schema({
     enum: ['user', 'admin'],
     default: 'user'
   },
+  isVerified: {
+    type: Boolean,
+    default: false
+  },
+  verificationToken: String,
+  verificationTokenExpires: Date,
   resetPasswordToken: String,
   resetPasswordExpires: Date,
   createdAt: {
@@ -50,5 +57,6 @@ UserSchema.methods.isValidPassword = async function(password) {
 };
 
 module.exports = mongoose.model('User', UserSchema);
+
 
 

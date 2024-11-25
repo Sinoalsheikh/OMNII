@@ -1,4 +1,5 @@
 
+
 const nodemailer = require('nodemailer');
 
 // Create a transporter using SMTP
@@ -37,6 +38,33 @@ const sendPasswordResetEmail = async (to, resetToken) => {
   }
 };
 
+// Function to send verification email
+const sendVerificationEmail = async (to, verificationToken) => {
+  const verificationUrl = `${process.env.FRONTEND_URL}/verify-email/${verificationToken}`;
+
+  const mailOptions = {
+    from: process.env.EMAIL_FROM,
+    to: to,
+    subject: 'Email Verification for OmniFlow.Ai',
+    html: `
+      <p>Thank you for registering with OmniFlow.Ai.</p>
+      <p>Please click on the following link to verify your email address:</p>
+      <a href="${verificationUrl}">${verificationUrl}</a>
+      <p>If you didn't register for an account, please ignore this email.</p>
+    `,
+  };
+
+  try {
+    await transporter.sendMail(mailOptions);
+    console.log('Verification email sent successfully');
+  } catch (error) {
+    console.error('Error sending verification email:', error);
+    throw new Error('Failed to send verification email');
+  }
+};
+
 module.exports = {
   sendPasswordResetEmail,
+  sendVerificationEmail,
 };
+
