@@ -2,12 +2,17 @@
 
 
 
+
 const express = require('express');
 const cors = require('cors');
 const dotenv = require('dotenv');
+const connectDB = require('./config/database');
 const agentRoutes = require('./routes/agents');
 
 dotenv.config();
+
+// Connect to MongoDB
+connectDB();
 
 const app = express();
 const port = process.env.PORT || 5002;
@@ -25,6 +30,7 @@ app.use('/api/agents', agentRoutes);
 app.listen(port, () => {
   console.log(`Server is running on port: ${port}`);
 });
+
 
 
 
