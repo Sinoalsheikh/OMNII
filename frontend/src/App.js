@@ -6,6 +6,7 @@
 
 
 
+
 import React, { useState, useEffect } from 'react';
 import { BrowserRouter as Router, Route, Switch, Link } from 'react-router-dom';
 import logo from './logo.svg';
@@ -16,6 +17,7 @@ import Auth from './components/Auth';
 import ForgotPassword from './components/ForgotPassword';
 import ResetPassword from './components/ResetPassword';
 import VerifyEmail from './components/VerifyEmail';
+import UserProfile from './components/UserProfile';
 
 function App() {
   const [message, setMessage] = useState('');
@@ -67,6 +69,13 @@ function App() {
             <>
               <p>{message}</p>
               <p>Role: {userRole}</p>
+              <nav>
+                <Link to="/profile">Profile</Link> | 
+                <Link to="/agents">Agents</Link>
+                {userRole === 'admin' && (
+                  <> | <Link to="/create-agent">Create Agent</Link></>
+                )}
+              </nav>
               <button onClick={handleLogout}>Logout</button>
             </>
           ) : (
@@ -96,6 +105,9 @@ function App() {
             </Route>
             {isLoggedIn && (
               <>
+                <Route path="/profile">
+                  <UserProfile />
+                </Route>
                 {userRole === 'admin' && (
                   <Route path="/create-agent">
                     <AgentCreationForm onAgentCreated={handleAgentCreated} />
@@ -114,6 +126,7 @@ function App() {
 }
 
 export default App;
+
 
 
 

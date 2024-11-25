@@ -4,12 +4,14 @@
 
 
 
+
 const express = require('express');
 const cors = require('cors');
 const dotenv = require('dotenv');
 const connectDB = require('./config/database');
 const agentRoutes = require('./routes/agents');
 const authRoutes = require('./routes/auth');
+const userRoutes = require('./routes/users');
 
 dotenv.config();
 
@@ -29,10 +31,12 @@ app.get('/api/hello', (req, res) => {
 // Use routes
 app.use('/api/agents', agentRoutes);
 app.use('/api/auth', authRoutes);
+app.use('/api/users', userRoutes);
 
 app.listen(port, () => {
   console.log(`Server is running on port: ${port}`);
 });
+
 
 
 
