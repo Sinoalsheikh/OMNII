@@ -3,6 +3,7 @@
 
 
 
+
 import React, { useState, useEffect } from 'react';
 import logo from './logo.svg';
 import './App.css';
@@ -14,11 +15,14 @@ function App() {
   const [message, setMessage] = useState('');
   const [agentListKey, setAgentListKey] = useState(0);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [userRole, setUserRole] = useState('');
 
   useEffect(() => {
     const token = localStorage.getItem('token');
-    if (token) {
+    const role = localStorage.getItem('userRole');
+    if (token && role) {
       setIsLoggedIn(true);
+      setUserRole(role);
     }
   }, []);
 
@@ -35,13 +39,16 @@ function App() {
     setAgentListKey(prevKey => prevKey + 1);
   };
 
-  const handleLogin = () => {
+  const handleLogin = (role) => {
     setIsLoggedIn(true);
+    setUserRole(role);
   };
 
   const handleLogout = () => {
     localStorage.removeItem('token');
+    localStorage.removeItem('userRole');
     setIsLoggedIn(false);
+    setUserRole('');
   };
 
   return (
@@ -52,6 +59,7 @@ function App() {
         {isLoggedIn ? (
           <>
             <p>{message}</p>
+            <p>Role: {userRole}</p>
             <button onClick={handleLogout}>Logout</button>
           </>
         ) : (
@@ -60,7 +68,9 @@ function App() {
       </header>
       {isLoggedIn && (
         <main>
-          <AgentCreationForm onAgentCreated={handleAgentCreated} />
+          {userRole === 'admin' && (
+            <AgentCreationForm onAgentCreated={handleAgentCreated} />
+          )}
           <AgentList key={agentListKey} />
         </main>
       )}
@@ -69,6 +79,7 @@ function App() {
 }
 
 export default App;
+
 
 
 

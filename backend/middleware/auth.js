@@ -1,4 +1,5 @@
 
+
 const jwt = require('jsonwebtoken');
 
 const authMiddleware = (req, res, next) => {
@@ -10,7 +11,10 @@ const authMiddleware = (req, res, next) => {
 
   try {
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    req.user = decoded.userId;
+    req.user = {
+      userId: decoded.userId,
+      role: decoded.role
+    };
     next();
   } catch (error) {
     res.status(401).json({ error: 'Token is not valid' });
@@ -18,3 +22,4 @@ const authMiddleware = (req, res, next) => {
 };
 
 module.exports = authMiddleware;
+

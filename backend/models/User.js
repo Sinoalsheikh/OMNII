@@ -1,4 +1,5 @@
 
+
 const mongoose = require('mongoose');
 const bcrypt = require('bcryptjs');
 
@@ -22,6 +23,11 @@ const UserSchema = new mongoose.Schema({
     required: true,
     minlength: 6
   },
+  role: {
+    type: String,
+    enum: ['user', 'admin'],
+    default: 'user'
+  },
   createdAt: {
     type: Date,
     default: Date.now
@@ -41,3 +47,4 @@ UserSchema.methods.isValidPassword = async function(password) {
 };
 
 module.exports = mongoose.model('User', UserSchema);
+
