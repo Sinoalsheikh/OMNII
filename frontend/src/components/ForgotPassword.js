@@ -1,15 +1,18 @@
 
+
 import React, { useState } from 'react';
 
 const ForgotPassword = () => {
   const [email, setEmail] = useState('');
   const [message, setMessage] = useState('');
   const [error, setError] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setMessage('');
     setError('');
+    setIsLoading(true);
 
     try {
       const response = await fetch('http://localhost:5002/api/auth/forgot-password', {
@@ -26,10 +29,12 @@ const ForgotPassword = () => {
         throw new Error(data.error || 'An error occurred');
       }
 
-      setMessage(data.message);
+      setMessage('Password reset email sent. Please check your inbox.');
       setEmail('');
     } catch (error) {
       setError(error.message);
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -47,12 +52,16 @@ const ForgotPassword = () => {
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             required
+            disabled={isLoading}
           />
         </div>
-        <button type="submit">Reset Password</button>
+        <button type="submit" disabled={isLoading}>
+          {isLoading ? 'Sending...' : 'Reset Password'}
+        </button>
       </form>
     </div>
   );
 };
 
 export default ForgotPassword;
+

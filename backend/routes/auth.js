@@ -1,11 +1,13 @@
 
 
 
+
 const express = require('express');
 const router = express.Router();
 const jwt = require('jsonwebtoken');
 const User = require('../models/User');
 const crypto = require('crypto');
+const { sendPasswordResetEmail } = require('../services/emailService');
 
 // ... existing code ...
 
@@ -24,38 +26,19 @@ router.post('/forgot-password', async (req, res) => {
     user.resetPasswordExpires = Date.now() + 3600000; // 1 hour
     await user.save();
     
-    // TODO: Send email with reset link
-    // For now, we'll just return the token in the response
-    res.json({ message: 'Password reset email sent', resetToken });
+    // Send password reset email
+    await sendPasswordResetEmail(user.email, resetToken);
+    
+    res.json({ message: 'Password reset email sent' });
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    console.error('Error in forgot password:', error);
+    res.status(500).json({ error: 'Server error' });
   }
 });
 
-// Reset password
-router.post('/reset-password', async (req, res) => {
-  try {
-    const { resetToken, newPassword } = req.body;
-    const user = await User.findOne({
-      resetPasswordToken: resetToken,
-      resetPasswordExpires: { $gt: Date.now() }
-    });
-    
-    if (!user) {
-      return res.status(400).json({ error: 'Invalid or expired reset token' });
-    }
-    
-    user.password = newPassword;
-    user.resetPasswordToken = undefined;
-    user.resetPasswordExpires = undefined;
-    await user.save();
-    
-    res.json({ message: 'Password reset successful' });
-  } catch (error) {
-    res.status(500).json({ error: error.message });
-  }
-});
+// ... rest of the existing code ...
 
 module.exports = router;
+
 
 
