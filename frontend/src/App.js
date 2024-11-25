@@ -1,4 +1,5 @@
 
+
 import React, { useState, useEffect } from 'react';
 import logo from './logo.svg';
 import './App.css';
@@ -7,7 +8,7 @@ function App() {
   const [message, setMessage] = useState('');
 
   useEffect(() => {
-    fetch('http://localhost:5000/api/hello')
+    fetch('http://localhost:5002/api/hello')  // Updated port to 5002
       .then(response => response.json())
       .then(data => setMessage(data.message))
       .catch(error => console.error('Error:', error));
@@ -25,4 +26,5 @@ function App() {
 }
 
 export default App;
+
 
