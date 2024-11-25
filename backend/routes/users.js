@@ -1,8 +1,10 @@
 
+
 const express = require('express');
 const router = express.Router();
 const User = require('../models/User');
 const authMiddleware = require('../middleware/auth');
+const bcrypt = require('bcryptjs');
 
 // Get user profile
 router.get('/profile', authMiddleware, async (req, res) => {
@@ -44,4 +46,25 @@ router.put('/profile', authMiddleware, async (req, res) => {
   }
 });
 
+// Change password
+router.put('/change-password', authMiddleware, async (req, res) => {
+  try {
+    const { newPassword } = req.body;
+    const user = await User.findById(req.user.userId);
+    if (!user) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    // Hash the new password
+    const salt = await bcrypt.genSalt(10);
+    user.password = await bcrypt.hash(newPassword, salt);
+
+    await user.save();
+    res.json({ message: 'Password changed successfully' });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
 module.exports = router;
+
