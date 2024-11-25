@@ -1,5 +1,6 @@
 
 
+
 const mongoose = require('mongoose');
 
 const AgentSchema = new mongoose.Schema({
@@ -11,6 +12,18 @@ const AgentSchema = new mongoose.Schema({
   role: {
     type: String,
     required: true,
+    trim: true
+  },
+  skills: [{
+    type: String,
+    trim: true
+  }],
+  avatar: {
+    type: String,
+    default: 'default-avatar.png'
+  },
+  description: {
+    type: String,
     trim: true
   },
   user: {
@@ -25,4 +38,5 @@ const AgentSchema = new mongoose.Schema({
 });
 
 module.exports = mongoose.model('Agent', AgentSchema);
+
 

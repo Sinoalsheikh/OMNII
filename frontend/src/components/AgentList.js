@@ -1,5 +1,6 @@
 
 
+
 import React, { useState, useEffect } from 'react';
 
 const AgentList = () => {
@@ -49,7 +50,10 @@ const AgentList = () => {
         <ul>
           {agents.map((agent) => (
             <li key={agent._id}>
+              <img src={agent.avatar} alt={agent.name} style={{ width: '50px', height: '50px' }} />
               <strong>{agent.name}</strong> - {agent.role}
+              <p>Skills: {agent.skills.join(', ')}</p>
+              <p>Description: {agent.description}</p>
             </li>
           ))}
         </ul>
@@ -59,4 +63,5 @@ const AgentList = () => {
 };
 
 export default AgentList;
+
 

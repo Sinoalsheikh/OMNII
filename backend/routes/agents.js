@@ -3,6 +3,7 @@
 
 
 
+
 const express = require('express');
 const router = express.Router();
 const Agent = require('../models/Agent');
@@ -12,12 +13,19 @@ const roleMiddleware = require('../middleware/roleMiddleware');
 // Create a new agent (admin only)
 router.post('/', authMiddleware, roleMiddleware(['admin']), async (req, res) => {
   try {
-    const { name, role } = req.body;
+    const { name, role, skills, avatar, description } = req.body;
     if (!name || !role) {
       return res.status(400).json({ error: 'Name and role are required' });
     }
     
-    const newAgent = new Agent({ name, role, user: req.user.userId });
+    const newAgent = new Agent({
+      name,
+      role,
+      skills: skills || [],
+      avatar: avatar || 'default-avatar.png',
+      description: description || '',
+      user: req.user.userId
+    });
     await newAgent.save();
     
     res.status(201).json(newAgent);
@@ -44,6 +52,7 @@ router.get('/', authMiddleware, roleMiddleware(['admin', 'user']), async (req, r
 });
 
 module.exports = router;
+
 
 
 

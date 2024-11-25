@@ -4,12 +4,16 @@
 
 
 
+
 import React, { useState, useEffect } from 'react';
+import { BrowserRouter as Router, Route, Switch, Link } from 'react-router-dom';
 import logo from './logo.svg';
 import './App.css';
 import AgentCreationForm from './components/AgentCreationForm';
 import AgentList from './components/AgentList';
 import Auth from './components/Auth';
+import ForgotPassword from './components/ForgotPassword';
+import ResetPassword from './components/ResetPassword';
 
 function App() {
   const [message, setMessage] = useState('');
@@ -52,33 +56,56 @@ function App() {
   };
 
   return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>Welcome to OmniFlow.Ai</p>
-        {isLoggedIn ? (
-          <>
-            <p>{message}</p>
-            <p>Role: {userRole}</p>
-            <button onClick={handleLogout}>Logout</button>
-          </>
-        ) : (
-          <Auth onLogin={handleLogin} />
-        )}
-      </header>
-      {isLoggedIn && (
-        <main>
-          {userRole === 'admin' && (
-            <AgentCreationForm onAgentCreated={handleAgentCreated} />
+    <Router>
+      <div className="App">
+        <header className="App-header">
+          <img src={logo} className="App-logo" alt="logo" />
+          <p>Welcome to OmniFlow.Ai</p>
+          {isLoggedIn ? (
+            <>
+              <p>{message}</p>
+              <p>Role: {userRole}</p>
+              <button onClick={handleLogout}>Logout</button>
+            </>
+          ) : (
+            <nav>
+              <Link to="/login">Login</Link> | 
+              <Link to="/forgot-password">Forgot Password</Link>
+            </nav>
           )}
-          <AgentList key={agentListKey} />
+        </header>
+        <main>
+          <Switch>
+            <Route path="/login">
+              <Auth onLogin={handleLogin} />
+            </Route>
+            <Route path="/forgot-password">
+              <ForgotPassword />
+            </Route>
+            <Route path="/reset-password/:resetToken">
+              <ResetPassword />
+            </Route>
+            {isLoggedIn && (
+              <>
+                {userRole === 'admin' && (
+                  <Route path="/create-agent">
+                    <AgentCreationForm onAgentCreated={handleAgentCreated} />
+                  </Route>
+                )}
+                <Route path="/agents">
+                  <AgentList key={agentListKey} />
+                </Route>
+              </>
+            )}
+          </Switch>
         </main>
-      )}
-    </div>
+      </div>
+    </Router>
   );
 }
 
 export default App;
+
 
 
 

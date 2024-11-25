@@ -1,11 +1,15 @@
 
 
 
+
 import React, { useState } from 'react';
 
 const AgentCreationForm = ({ onAgentCreated }) => {
   const [agentName, setAgentName] = useState('');
   const [agentRole, setAgentRole] = useState('');
+  const [agentSkills, setAgentSkills] = useState('');
+  const [agentAvatar, setAgentAvatar] = useState('');
+  const [agentDescription, setAgentDescription] = useState('');
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
 
@@ -22,7 +26,13 @@ const AgentCreationForm = ({ onAgentCreated }) => {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${token}`
         },
-        body: JSON.stringify({ name: agentName, role: agentRole }),
+        body: JSON.stringify({
+          name: agentName,
+          role: agentRole,
+          skills: agentSkills.split(',').map(skill => skill.trim()),
+          avatar: agentAvatar,
+          description: agentDescription
+        }),
       });
 
       if (!response.ok) {
@@ -33,6 +43,9 @@ const AgentCreationForm = ({ onAgentCreated }) => {
       console.log('Agent created:', result);
       setAgentName('');
       setAgentRole('');
+      setAgentSkills('');
+      setAgentAvatar('');
+      setAgentDescription('');
       if (onAgentCreated) {
         onAgentCreated(result);
       }
@@ -70,6 +83,35 @@ const AgentCreationForm = ({ onAgentCreated }) => {
           disabled={isLoading}
         />
       </div>
+      <div>
+        <label htmlFor="agentSkills">Agent Skills (comma-separated):</label>
+        <input
+          type="text"
+          id="agentSkills"
+          value={agentSkills}
+          onChange={(e) => setAgentSkills(e.target.value)}
+          disabled={isLoading}
+        />
+      </div>
+      <div>
+        <label htmlFor="agentAvatar">Agent Avatar URL:</label>
+        <input
+          type="text"
+          id="agentAvatar"
+          value={agentAvatar}
+          onChange={(e) => setAgentAvatar(e.target.value)}
+          disabled={isLoading}
+        />
+      </div>
+      <div>
+        <label htmlFor="agentDescription">Agent Description:</label>
+        <textarea
+          id="agentDescription"
+          value={agentDescription}
+          onChange={(e) => setAgentDescription(e.target.value)}
+          disabled={isLoading}
+        />
+      </div>
       <button type="submit" disabled={isLoading}>
         {isLoading ? 'Creating...' : 'Create Agent'}
       </button>
@@ -78,5 +120,6 @@ const AgentCreationForm = ({ onAgentCreated }) => {
 };
 
 export default AgentCreationForm;
+
 
 
