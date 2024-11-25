@@ -3,11 +3,13 @@
 
 
 
+
 const express = require('express');
 const cors = require('cors');
 const dotenv = require('dotenv');
 const connectDB = require('./config/database');
 const agentRoutes = require('./routes/agents');
+const authRoutes = require('./routes/auth');
 
 dotenv.config();
 
@@ -24,12 +26,14 @@ app.get('/api/hello', (req, res) => {
   res.json({ message: 'Hello from OmniFlow.Ai backend!' });
 });
 
-// Use agent routes
+// Use routes
 app.use('/api/agents', agentRoutes);
+app.use('/api/auth', authRoutes);
 
 app.listen(port, () => {
   console.log(`Server is running on port: ${port}`);
 });
+
 
 
 
