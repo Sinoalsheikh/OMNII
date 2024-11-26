@@ -1,137 +1,77 @@
+import React from 'react';
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { ThemeProvider, createTheme } from '@mui/material/styles';
+import CssBaseline from '@mui/material/CssBaseline';
 
+// Layout Components
+import Layout from './components/layout/Layout';
 
+// Pages
+import Dashboard from './pages/Dashboard';
+import AgentCreation from './pages/AgentCreation';
+import Analytics from './pages/Analytics';
+import Settings from './pages/Settings';
 
-
-
-
-
-
-
-import React, { useState, useEffect } from 'react';
-import { BrowserRouter as Router, Route, Switch, Link } from 'react-router-dom';
-import logo from './logo.svg';
-import './App.css';
-import AgentCreationForm from './components/AgentCreationForm';
-import AgentList from './components/AgentList';
-import Auth from './components/Auth';
-import ForgotPassword from './components/ForgotPassword';
-import ResetPassword from './components/ResetPassword';
-import VerifyEmail from './components/VerifyEmail';
-import UserProfile from './components/UserProfile';
+const theme = createTheme({
+  palette: {
+    mode: 'dark',
+    primary: {
+      main: '#2196f3',
+    },
+    secondary: {
+      main: '#f50057',
+    },
+    background: {
+      default: '#0a1929',
+      paper: '#132f4c',
+    },
+  },
+  typography: {
+    fontFamily: '"Roboto", "Helvetica", "Arial", sans-serif',
+    h1: {
+      fontSize: '2.5rem',
+      fontWeight: 500,
+    },
+    h2: {
+      fontSize: '2rem',
+      fontWeight: 500,
+    },
+  },
+  components: {
+    MuiButton: {
+      styleOverrides: {
+        root: {
+          borderRadius: 8,
+        },
+      },
+    },
+    MuiCard: {
+      styleOverrides: {
+        root: {
+          borderRadius: 12,
+          boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)',
+        },
+      },
+    },
+  },
+});
 
 function App() {
-  const [message, setMessage] = useState('');
-  const [agentListKey, setAgentListKey] = useState(0);
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
-  const [userRole, setUserRole] = useState('');
-
-  useEffect(() => {
-    const token = localStorage.getItem('token');
-    const role = localStorage.getItem('userRole');
-    if (token && role) {
-      setIsLoggedIn(true);
-      setUserRole(role);
-    }
-  }, []);
-
-  useEffect(() => {
-    if (isLoggedIn) {
-      fetch('http://localhost:5002/api/hello')
-        .then(response => response.json())
-        .then(data => setMessage(data.message))
-        .catch(error => console.error('Error:', error));
-    }
-  }, [isLoggedIn]);
-
-  const handleAgentCreated = () => {
-    setAgentListKey(prevKey => prevKey + 1);
-  };
-
-  const handleLogin = (role) => {
-    setIsLoggedIn(true);
-    setUserRole(role);
-  };
-
-  const handleLogout = () => {
-    localStorage.removeItem('token');
-    localStorage.removeItem('userRole');
-    setIsLoggedIn(false);
-    setUserRole('');
-  };
-
   return (
-    <Router>
-      <div className="App">
-        <header className="App-header">
-          <img src={logo} className="App-logo" alt="logo" />
-          <p>Welcome to OmniFlow.Ai</p>
-          {isLoggedIn ? (
-            <>
-              <p>{message}</p>
-              <p>Role: {userRole}</p>
-              <nav>
-                <Link to="/profile">Profile</Link> | 
-                <Link to="/agents">Agents</Link>
-                {userRole === 'admin' && (
-                  <> | <Link to="/create-agent">Create Agent</Link></>
-                )}
-              </nav>
-              <button onClick={handleLogout}>Logout</button>
-            </>
-          ) : (
-            <nav>
-              <Link to="/login">Login</Link> | 
-              <Link to="/register">Register</Link> | 
-              <Link to="/forgot-password">Forgot Password</Link>
-            </nav>
-          )}
-        </header>
-        <main>
-          <Switch>
-            <Route path="/login">
-              <Auth onLogin={handleLogin} />
-            </Route>
-            <Route path="/register">
-              <Auth onLogin={handleLogin} isRegister={true} />
-            </Route>
-            <Route path="/forgot-password">
-              <ForgotPassword />
-            </Route>
-            <Route path="/reset-password/:resetToken">
-              <ResetPassword />
-            </Route>
-            <Route path="/verify-email/:token">
-              <VerifyEmail />
-            </Route>
-            {isLoggedIn && (
-              <>
-                <Route path="/profile">
-                  <UserProfile />
-                </Route>
-                {userRole === 'admin' && (
-                  <Route path="/create-agent">
-                    <AgentCreationForm onAgentCreated={handleAgentCreated} />
-                  </Route>
-                )}
-                <Route path="/agents">
-                  <AgentList key={agentListKey} />
-                </Route>
-              </>
-            )}
-          </Switch>
-        </main>
-      </div>
-    </Router>
+    <ThemeProvider theme={theme}>
+      <CssBaseline />
+      <Router>
+        <Layout>
+          <Routes>
+            <Route path="/" element={<Dashboard />} />
+            <Route path="/create-agent" element={<AgentCreation />} />
+            <Route path="/analytics" element={<Analytics />} />
+            <Route path="/settings" element={<Settings />} />
+          </Routes>
+        </Layout>
+      </Router>
+    </ThemeProvider>
   );
 }
 
 export default App;
-
-
-
-
-
-
-
-
-
