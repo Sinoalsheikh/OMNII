@@ -1,181 +1,342 @@
 import React, { useState } from 'react';
 import {
   Box,
+  Grid,
   Card,
   CardContent,
   Typography,
-  Grid,
   Switch,
-  FormControlLabel,
-  TextField,
   Button,
+  Stack,
   Divider,
+  TextField,
+  Select,
+  MenuItem,
+  FormControl,
+  InputLabel,
+  FormControlLabel,
   Alert,
+  IconButton,
+  Collapse,
+  Tab,
+  Tabs,
+  List,
+  ListItem,
+  ListItemText,
+  ListItemSecondaryAction,
+  Paper,
+  Chip,
 } from '@mui/material';
+import {
+  Save as SaveIcon,
+  Close as CloseIcon,
+  Add as AddIcon,
+  CloudUpload as CloudUploadIcon,
+  Security as SecurityIcon,
+  Api as ApiIcon,
+  Notifications as NotificationsIcon,
+  Language as LanguageIcon,
+  Storage as StorageIcon,
+} from '@mui/icons-material';
 
 const Settings = () => {
+  const [currentTab, setCurrentTab] = useState(0);
+  const [showAlert, setShowAlert] = useState(false);
   const [settings, setSettings] = useState({
+    aiModel: 'gpt-4',
+    language: 'en',
+    timezone: 'UTC',
+    autoSave: true,
     notifications: true,
-    emailAlerts: true,
-    darkMode: true,
-    autoAssign: false,
-    apiKey: '********-****-****-****-************',
-    webhookUrl: 'https://api.example.com/webhook',
+    dataRetention: '30',
+    apiKey: '****************************************',
+    maxAgents: '10',
+    debugMode: false,
   });
 
-  const [showAlert, setShowAlert] = useState(false);
+  const [integrations] = useState([
+    { name: 'Slack', status: 'Connected', lastSync: '2 hours ago' },
+    { name: 'Microsoft Teams', status: 'Connected', lastSync: '1 hour ago' },
+    { name: 'Salesforce', status: 'Disconnected', lastSync: 'Never' },
+    { name: 'Zendesk', status: 'Connected', lastSync: '30 minutes ago' },
+  ]);
 
-  const handleToggleChange = (setting) => (event) => {
-    setSettings({
-      ...settings,
-      [setting]: event.target.checked,
-    });
+  const handleTabChange = (event, newValue) => {
+    setCurrentTab(newValue);
   };
 
-  const handleInputChange = (setting) => (event) => {
+  const handleSettingChange = (setting) => (event) => {
     setSettings({
       ...settings,
-      [setting]: event.target.value,
+      [setting]: event.target.type === 'checkbox' ? event.target.checked : event.target.value,
     });
   };
 
   const handleSave = () => {
     setShowAlert(true);
-    setTimeout(() => setShowAlert(false), 3000);
+    // Implement save functionality
   };
+
+  const renderGeneralSettings = () => (
+    <Stack spacing={3}>
+      <Card>
+        <CardContent>
+          <Typography variant="h6" gutterBottom>
+            AI Configuration
+          </Typography>
+          <Grid container spacing={3}>
+            <Grid item xs={12} md={6}>
+              <FormControl fullWidth>
+                <InputLabel>AI Model</InputLabel>
+                <Select
+                  value={settings.aiModel}
+                  label="AI Model"
+                  onChange={handleSettingChange('aiModel')}
+                >
+                  <MenuItem value="gpt-4">GPT-4</MenuItem>
+                  <MenuItem value="gpt-3.5">GPT-3.5</MenuItem>
+                  <MenuItem value="claude">Claude</MenuItem>
+                  <MenuItem value="custom">Custom Model</MenuItem>
+                </Select>
+              </FormControl>
+            </Grid>
+            <Grid item xs={12} md={6}>
+              <FormControl fullWidth>
+                <InputLabel>Language</InputLabel>
+                <Select
+                  value={settings.language}
+                  label="Language"
+                  onChange={handleSettingChange('language')}
+                >
+                  <MenuItem value="en">English</MenuItem>
+                  <MenuItem value="es">Spanish</MenuItem>
+                  <MenuItem value="fr">French</MenuItem>
+                  <MenuItem value="de">German</MenuItem>
+                </Select>
+              </FormControl>
+            </Grid>
+            <Grid item xs={12} md={6}>
+              <FormControl fullWidth>
+                <InputLabel>Data Retention</InputLabel>
+                <Select
+                  value={settings.dataRetention}
+                  label="Data Retention"
+                  onChange={handleSettingChange('dataRetention')}
+                >
+                  <MenuItem value="7">7 days</MenuItem>
+                  <MenuItem value="30">30 days</MenuItem>
+                  <MenuItem value="90">90 days</MenuItem>
+                  <MenuItem value="365">1 year</MenuItem>
+                </Select>
+              </FormControl>
+            </Grid>
+            <Grid item xs={12} md={6}>
+              <FormControl fullWidth>
+                <InputLabel>Max Concurrent Agents</InputLabel>
+                <Select
+                  value={settings.maxAgents}
+                  label="Max Concurrent Agents"
+                  onChange={handleSettingChange('maxAgents')}
+                >
+                  <MenuItem value="5">5 agents</MenuItem>
+                  <MenuItem value="10">10 agents</MenuItem>
+                  <MenuItem value="20">20 agents</MenuItem>
+                  <MenuItem value="unlimited">Unlimited</MenuItem>
+                </Select>
+              </FormControl>
+            </Grid>
+          </Grid>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardContent>
+          <Typography variant="h6" gutterBottom>
+            System Preferences
+          </Typography>
+          <Stack spacing={2}>
+            <FormControlLabel
+              control={
+                <Switch
+                  checked={settings.autoSave}
+                  onChange={handleSettingChange('autoSave')}
+                />
+              }
+              label="Auto-save changes"
+            />
+            <FormControlLabel
+              control={
+                <Switch
+                  checked={settings.notifications}
+                  onChange={handleSettingChange('notifications')}
+                />
+              }
+              label="Enable notifications"
+            />
+            <FormControlLabel
+              control={
+                <Switch
+                  checked={settings.debugMode}
+                  onChange={handleSettingChange('debugMode')}
+                />
+              }
+              label="Debug mode"
+            />
+          </Stack>
+        </CardContent>
+      </Card>
+    </Stack>
+  );
+
+  const renderIntegrations = () => (
+    <Stack spacing={3}>
+      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <Typography variant="h6">
+          Connected Services
+        </Typography>
+        <Button
+          variant="contained"
+          startIcon={<AddIcon />}
+          size="small"
+        >
+          Add Integration
+        </Button>
+      </Box>
+
+      <List>
+        {integrations.map((integration) => (
+          <Paper key={integration.name} sx={{ mb: 2 }}>
+            <ListItem>
+              <ListItemText
+                primary={integration.name}
+                secondary={`Last synced: ${integration.lastSync}`}
+              />
+              <ListItemSecondaryAction>
+                <Chip
+                  label={integration.status}
+                  color={integration.status === 'Connected' ? 'success' : 'error'}
+                  size="small"
+                  sx={{ mr: 1 }}
+                />
+                <Button
+                  variant="outlined"
+                  size="small"
+                >
+                  {integration.status === 'Connected' ? 'Disconnect' : 'Connect'}
+                </Button>
+              </ListItemSecondaryAction>
+            </ListItem>
+          </Paper>
+        ))}
+      </List>
+
+      <Card>
+        <CardContent>
+          <Typography variant="h6" gutterBottom>
+            API Configuration
+          </Typography>
+          <Stack spacing={3}>
+            <TextField
+              fullWidth
+              label="API Key"
+              type="password"
+              value={settings.apiKey}
+              onChange={handleSettingChange('apiKey')}
+            />
+            <Box sx={{ display: 'flex', gap: 2 }}>
+              <Button
+                variant="outlined"
+                startIcon={<CloudUploadIcon />}
+              >
+                Generate New Key
+              </Button>
+              <Button
+                variant="outlined"
+                startIcon={<ApiIcon />}
+              >
+                View API Docs
+              </Button>
+            </Box>
+          </Stack>
+        </CardContent>
+      </Card>
+    </Stack>
+  );
 
   return (
     <Box>
-      <Typography variant="h4" gutterBottom>
-        Settings
-      </Typography>
-      <Typography variant="body1" color="text.secondary" paragraph>
-        Configure your OmniFlow.Ai workspace settings and preferences.
-      </Typography>
+      <Box sx={{ mb: 4 }}>
+        <Typography variant="h4" gutterBottom>
+          Settings
+        </Typography>
+        <Typography variant="body1" color="text.secondary">
+          Configure your OmniFlow.AI platform settings and integrations
+        </Typography>
+      </Box>
 
-      {showAlert && (
-        <Alert severity="success" sx={{ mb: 3 }}>
+      <Collapse in={showAlert}>
+        <Alert
+          severity="success"
+          action={
+            <IconButton
+              aria-label="close"
+              color="inherit"
+              size="small"
+              onClick={() => setShowAlert(false)}
+            >
+              <CloseIcon fontSize="inherit" />
+            </IconButton>
+          }
+          sx={{ mb: 2 }}
+        >
           Settings saved successfully!
         </Alert>
-      )}
+      </Collapse>
 
-      <Grid container spacing={3}>
-        <Grid item xs={12} md={6}>
-          <Card>
-            <CardContent>
-              <Typography variant="h6" gutterBottom>
-                General Settings
-              </Typography>
-              <Box sx={{ mt: 2 }}>
-                <FormControlLabel
-                  control={
-                    <Switch
-                      checked={settings.notifications}
-                      onChange={handleToggleChange('notifications')}
-                    />
-                  }
-                  label="Enable Notifications"
-                />
-                <Typography variant="body2" color="text.secondary" sx={{ ml: 4, mb: 2 }}>
-                  Receive notifications about agent activities and system updates
-                </Typography>
+      <Box sx={{ borderBottom: 1, borderColor: 'divider', mb: 3 }}>
+        <Tabs
+          value={currentTab}
+          onChange={handleTabChange}
+          aria-label="settings tabs"
+        >
+          <Tab icon={<SecurityIcon />} iconPosition="start" label="General" />
+          <Tab icon={<ApiIcon />} iconPosition="start" label="Integrations" />
+          <Tab icon={<NotificationsIcon />} iconPosition="start" label="Notifications" />
+          <Tab icon={<StorageIcon />} iconPosition="start" label="Storage" />
+        </Tabs>
+      </Box>
 
-                <FormControlLabel
-                  control={
-                    <Switch
-                      checked={settings.emailAlerts}
-                      onChange={handleToggleChange('emailAlerts')}
-                    />
-                  }
-                  label="Email Alerts"
-                />
-                <Typography variant="body2" color="text.secondary" sx={{ ml: 4, mb: 2 }}>
-                  Receive important alerts via email
-                </Typography>
+      <Box sx={{ mb: 3 }}>
+        {currentTab === 0 && renderGeneralSettings()}
+        {currentTab === 1 && renderIntegrations()}
+        {currentTab === 2 && (
+          <Typography color="text.secondary">
+            Notification settings coming soon...
+          </Typography>
+        )}
+        {currentTab === 3 && (
+          <Typography color="text.secondary">
+            Storage settings coming soon...
+          </Typography>
+        )}
+      </Box>
 
-                <FormControlLabel
-                  control={
-                    <Switch
-                      checked={settings.darkMode}
-                      onChange={handleToggleChange('darkMode')}
-                    />
-                  }
-                  label="Dark Mode"
-                />
-                <Typography variant="body2" color="text.secondary" sx={{ ml: 4, mb: 2 }}>
-                  Toggle dark/light theme
-                </Typography>
+      <Divider sx={{ my: 3 }} />
 
-                <FormControlLabel
-                  control={
-                    <Switch
-                      checked={settings.autoAssign}
-                      onChange={handleToggleChange('autoAssign')}
-                    />
-                  }
-                  label="Auto-assign Tasks"
-                />
-                <Typography variant="body2" color="text.secondary" sx={{ ml: 4 }}>
-                  Automatically assign tasks to available agents
-                </Typography>
-              </Box>
-            </CardContent>
-          </Card>
-        </Grid>
-
-        <Grid item xs={12} md={6}>
-          <Card>
-            <CardContent>
-              <Typography variant="h6" gutterBottom>
-                Integration Settings
-              </Typography>
-              <Box sx={{ mt: 2 }}>
-                <TextField
-                  fullWidth
-                  label="API Key"
-                  value={settings.apiKey}
-                  onChange={handleInputChange('apiKey')}
-                  margin="normal"
-                  type="password"
-                />
-                <TextField
-                  fullWidth
-                  label="Webhook URL"
-                  value={settings.webhookUrl}
-                  onChange={handleInputChange('webhookUrl')}
-                  margin="normal"
-                />
-              </Box>
-            </CardContent>
-          </Card>
-
-          <Card sx={{ mt: 3 }}>
-            <CardContent>
-              <Typography variant="h6" gutterBottom>
-                Data Management
-              </Typography>
-              <Box sx={{ mt: 2 }}>
-                <Button variant="outlined" color="error" fullWidth>
-                  Clear All Data
-                </Button>
-                <Typography variant="body2" color="text.secondary" sx={{ mt: 1, mb: 2 }}>
-                  This action will permanently delete all your data
-                </Typography>
-
-                <Button variant="outlined" fullWidth>
-                  Export Data
-                </Button>
-                <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
-                  Download all your data in JSON format
-                </Typography>
-              </Box>
-            </CardContent>
-          </Card>
-        </Grid>
-      </Grid>
-
-      <Box sx={{ mt: 3, display: 'flex', justifyContent: 'flex-end' }}>
-        <Button variant="contained" onClick={handleSave}>
+      <Box sx={{ display: 'flex', justifyContent: 'flex-end', gap: 2 }}>
+        <Button
+          variant="outlined"
+          onClick={() => {
+            // Reset settings
+          }}
+        >
+          Reset
+        </Button>
+        <Button
+          variant="contained"
+          startIcon={<SaveIcon />}
+          onClick={handleSave}
+        >
           Save Changes
         </Button>
       </Box>
