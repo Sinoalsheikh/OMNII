@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import agentService from '../services/agentService';
 import {
   Box,
   Grid,
@@ -79,30 +80,11 @@ const roles = [
 ];
 
 const aiModels = [
-  'const aiModels = [
   { label: 'GPT-4', value: 'GPT-4' },
   { label: 'Claude 2', value: 'Claude 2' },
   { label: 'BERT', value: 'BERT' },
   { label: 'Custom ML Model', value: 'Custom ML Model' },
   { label: 'Hybrid AI System', value: 'Hybrid AI System' }
-];
-
-...
-
-<FormControl fullWidth>
-  <InputLabel>AI Model</InputLabel>
-  <Select
-    value={agentData.aiModel}
-    onChange={handleInputChange('aiModel')}
-  >
-    {aiModels.map((model) => (
-      <MenuItem key={model.value} value={model.value}>
-        {model.label}
-     -4',
-  'Claude 2',
-  'BERT',
-  'Custom ML Model',
-  'Hybrid AI System'
 ];
 
 const languages = [
@@ -133,6 +115,29 @@ const integrations = [
 
 const AgentCreation = () => {
   const [activeStep, setActiveStep] = useState(0);
+  const [isDeploying, setIsDeploying] = useState(false);
+  const [deploymentError, setDeploymentError] = useState(null);
+
+  const handleDeploy = async () => {
+    try {
+      setIsDeploying(true);
+      setDeploymentError(null);
+
+      // Create the agent through our service
+      const response = await agentService.createAgent(agentData);
+
+      // Show success message
+      alert('Agent deployed successfully!');
+      
+      // Optionally redirect to the agent dashboard or list
+      // history.push('/agents');
+    } catch (error) {
+      console.error('Deployment error:', error);
+      setDeploymentError(error.message);
+    } finally {
+      setIsDeploying(false);
+    }
+  };
 const [agentData, setAgentData] = useState({
     name: '',
     avatar: '',
@@ -261,7 +266,7 @@ const [agentData, setAgentData] = useState({
                 </Button>
               </Grid>
             )}
-            <Grid item xs={12}>
+<Grid item xs={12}>
               <FormControl fullWidth>
                 <InputLabel>Role</InputLabel>
                 <Select
@@ -271,6 +276,21 @@ const [agentData, setAgentData] = useState({
                   {roles.map((role) => (
                     <MenuItem key={role} value={role}>
                       {role}
+                    </MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
+            </Grid>
+            <Grid item xs={12}>
+              <FormControl fullWidth>
+                <InputLabel>AI Model</InputLabel>
+                <Select
+                  value={agentData.aiModel}
+                  onChange={handleInputChange('aiModel')}
+                >
+                  {aiModels.map((model) => (
+                    <MenuItem key={model.value} value={model.value}>
+                      {model.label}
                     </MenuItem>
                   ))}
                 </Select>
@@ -1010,7 +1030,13 @@ const handleScriptSubmit = () => {
             ))}
           </Stepper>
 
-          {getStepContent(activeStep)}
+{getStepContent(activeStep)}
+
+          {deploymentError && (
+            <Alert severity="error" sx={{ mt: 2, mb: 2 }}>
+              {deploymentError}
+            </Alert>
+          )}
 
           <Box sx={{ display: 'flex', justifyContent: 'flex-end', mt: 3 }}>
             <Button
@@ -1021,13 +1047,17 @@ const handleScriptSubmit = () => {
               Back
             </Button>
             <Button
-              variant="contained"
-              onClick={activeStep === steps.length - 1 ? () => {
-                // Handle agent creation/deployment
-                console.log('Deploying agent:', agentData);
-              } : handleNext}
+variant="contained"
+              onClick={activeStep === steps.length - 1 ? handleDeploy : handleNext}
             >
-              {activeStep === steps.length - 1 ? 'Deploy Agent' : 'Next'}
+              {activeStep === steps.length - 1 ? (
+                <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                  {isDeploying ? (
+                    <CircularProgress size={24} sx={{ mr: 1 }} />
+                  ) : null}
+                  Deploy Agent
+                </Box>
+              ) : 'Next'}
             </Button>
           </Box>
         </CardContent>
