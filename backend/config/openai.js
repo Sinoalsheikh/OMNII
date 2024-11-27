@@ -4,32 +4,30 @@ const validateApiKey = (key) => {
   if (!key) {
     throw new Error('OPENAI_API_KEY environment variable is not defined');
   }
-  // Return the key as-is without validation since we're using a project key
   return key;
 };
 
-// Use the API key directly
-const apiKey = process.env.OPENAI_API_KEY || '';
-
+// Initialize OpenAI client
 const openai = new OpenAI({
-  apiKey: apiKey,
-  baseURL: 'https://api.projectopenai.com/v1',
+  apiKey: process.env.OPENAI_API_KEY,
   timeout: 30000, // 30 second timeout
-  maxRetries: 3,
-  defaultHeaders: {
-    'OpenAI-Beta': 'assistants=v1'
-  }
+  maxRetries: 3
 });
 
 // Test the configuration
 const testConfig = async () => {
   try {
+    if (!process.env.OPENAI_API_KEY) {
+      throw new Error('OPENAI_API_KEY environment variable is not defined');
+    }
+
     const response = await openai.chat.completions.create({
       model: 'gpt-3.5-turbo',
       messages: [{ role: 'system', content: 'Test connection' }],
       max_tokens: 5,
       temperature: 0
     });
+
     if (response && response.choices && response.choices.length > 0) {
       console.log('OpenAI configuration validated successfully');
       return true;

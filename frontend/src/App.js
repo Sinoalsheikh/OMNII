@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { ThemeProvider, createTheme } from '@mui/material/styles';
 import CssBaseline from '@mui/material/CssBaseline';
@@ -14,12 +14,27 @@ import Settings from './pages/Settings';
 import Login from './pages/Login';
 import Register from './pages/Register';
 
+// Services
+import authService from './services/authService';
+
 // Protected Route Component
 const ProtectedRoute = ({ children }) => {
   const token = localStorage.getItem('token');
-  if (!token) {
+  const user = authService.getUser();
+  
+  useEffect(() => {
+    console.log('Protected Route Check:', {
+      hasToken: !!token,
+      user: user,
+      isAuthenticated: authService.isAuthenticated()
+    });
+  }, [token, user]);
+
+  if (!token || !user) {
+    console.log('No token or user found, redirecting to login');
     return <Navigate to="/login" />;
   }
+  
   return children;
 };
 
@@ -68,13 +83,32 @@ const theme = createTheme({
 });
 
 function App() {
+  useEffect(() => {
+    // Check authentication status on app load
+    const token = localStorage.getItem('token');
+    const user = authService.getUser();
+    console.log('App Authentication Check:', {
+      hasToken: !!token,
+      user: user,
+      isAuthenticated: authService.isAuthenticated()
+    });
+  }, []);
+
   return (
     <ThemeProvider theme={theme}>
       <CssBaseline />
       <Router>
         <Routes>
-          <Route path="/login" element={<Login />} />
-          <Route path="/register" element={<Register />} />
+          <Route path="/login" element={
+            authService.isAuthenticated() ? 
+              <Navigate to="/" /> : 
+              <Login />
+          } />
+          <Route path="/register" element={
+            authService.isAuthenticated() ? 
+              <Navigate to="/" /> : 
+              <Register />
+          } />
           <Route path="/" element={
             <ProtectedRoute>
               <Layout>
@@ -103,6 +137,8 @@ function App() {
               </Layout>
             </ProtectedRoute>
           } />
+          {/* Catch all route */}
+          <Route path="*" element={<Navigate to="/" />} />
         </Routes>
       </Router>
     </ThemeProvider>

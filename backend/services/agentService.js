@@ -24,12 +24,6 @@ class AgentService {
         throw new Error('Database connection is not established. Please ensure MongoDB is running.');
       }
 
-      // Test OpenAI configuration
-      const openAiConfigValid = await testConfig();
-      if (!openAiConfigValid) {
-        throw new Error('OpenAI configuration test failed');
-      }
-
       // Initialize agent with default values if needed
       const defaultedAgent = {
         ...agent,
@@ -42,123 +36,109 @@ class AgentService {
         }
       };
 
+      // Add warning if AI features are limited
+      if (!aiAvailable) {
+        defaultedAgent.limitations = {
+          aiFeatures: 'limited',
+          reason: 'OpenAI service not available',
+          fallbackMode: true
+        };
+        console.log('Agent initialized with limited AI features:', defaultedAgent.limitations);
+      }
+
       console.log(`Successfully initialized agent: ${defaultedAgent.name}`);
       return defaultedAgent;
     } catch (error) {
       console.error('Error initializing agent:', error);
-      throw new Error(`Agent initialization failed: ${error.message}`);
-    }
-  }
-
-  async cleanupAgent(agent) {
-    try {
-      // Cleanup agent resources
-      console.log(`Cleaning up agent: ${agent.name}`);
-      return true;
-    } catch (error) {
-      console.error('Error cleaning up agent:', error);
-      throw error;
-    }
-  }
-
-  async getAgentMetrics(agentId) {
-    try {
-      // Return default metrics for now
-      return {
-        responseTime: 0,
-        taskCompletionRate: 0,
-        customerSatisfaction: 0,
-        accuracyScore: 0
-      };
-    } catch (error) {
-      console.error('Error getting agent metrics:', error);
       throw error;
     }
   }
 
   async processMessage(message, agentConfig) {
-    try {
-      // Validate inputs
-      if (!message) {
-        throw new Error('Message is required');
-      }
-      if (!agentConfig || !agentConfig.role) {
-        throw new Error('Invalid agent configuration');
-      }
-
-      // If OpenAI is not available, return a fallback response
-      if (!aiAvailable) {
-        return {
-          success: true,
-          response: "I apologize, but AI features are currently limited. The service is operating in fallback mode.",
-          mode: "fallback"
-        };
-      }
-
-      const systemPrompt = this.generateSystemPrompt(agentConfig);
-
-      try {
-        const completion = await openai.chat.completions.create({
-          model: agentConfig.aiModel || "gpt-3.5-turbo",
-          messages: [
-            {
-              role: "system",
-              content: systemPrompt
-            },
-            {
-              role: "user",
-              content: message
-            }
-          ],
-          temperature: 0.7,
-          max_tokens: 1000
-        });
-
-        if (!completion?.choices?.[0]?.message?.content) {
-          throw new Error('Invalid response from OpenAI API');
-        }
-
-        return {
-          success: true,
-          response: completion.choices[0].message.content,
-          usage: completion.usage,
-          mode: "ai"
-        };
-      } catch (error) {
-        console.error('OpenAI API error:', error);
-        // Fallback to basic response if OpenAI fails
-        return {
-          success: true,
-          response: "I apologize, but I'm currently experiencing issues with the AI service. I'm operating in fallback mode.",
-          mode: "fallback",
-          error: error.message
-        };
-      }
-    } catch (error) {
-      console.error('Error processing message:', error);
+    if (!message || !agentConfig || !agentConfig.role) {
+      console.error('Invalid input:', { message, agentConfig });
       return {
         success: false,
-        error: error.message,
-        details: error.stack,
-        mode: "error"
+        error: 'Invalid input parameters',
+        mode: 'error'
       };
     }
+
+    // If OpenAI is not available, use rule-based responses
+    if (!aiAvailable) {
+      console.log('Using fallback response mode');
+      return {
+        success: true,
+        response: this.getFallbackResponse(message, agentConfig),
+        mode: 'fallback'
+      };
+    }
+
+    try {
+      const systemPrompt = this.generateSystemPrompt(agentConfig);
+      const completion = await openai.chat.completions.create({
+        model: agentConfig.aiModel || 'gpt-3.5-turbo',
+        messages: [
+          { role: 'system', content: systemPrompt },
+          { role: 'user', content: message }
+        ],
+        temperature: 0.7,
+        max_tokens: 1000
+      });
+
+      if (!completion?.choices?.[0]?.message?.content) {
+        throw new Error('Invalid response from OpenAI API');
+      }
+
+      return {
+        success: true,
+        response: completion.choices[0].message.content,
+        usage: completion.usage,
+        mode: 'ai'
+      };
+    } catch (error) {
+      console.error('Error in AI processing:', error);
+      return {
+        success: true,
+        response: this.getFallbackResponse(message, agentConfig),
+        mode: 'fallback',
+        error: error.message
+      };
+    }
+  }
+
+  getFallbackResponse(message, agentConfig) {
+    const lowercaseMessage = message.toLowerCase();
+    const responses = {
+      greeting: lowercaseMessage.includes('hello') || lowercaseMessage.includes('hi')
+        ? `Hello! I'm your ${agentConfig.role}. I'm currently operating in basic mode, but I'll do my best to assist you.`
+        : null,
+      help: lowercaseMessage.includes('help')
+        ? `I'm here to help as your ${agentConfig.role}. While AI features are limited, I can still assist with basic tasks and information.`
+        : null,
+      status: lowercaseMessage.includes('status')
+        ? `I'm currently operating in basic mode due to AI service limitations. I can still help with fundamental tasks.`
+        : null
+    };
+
+    return responses.greeting || responses.help || responses.status ||
+      `I understand you're trying to communicate with me. As your ${agentConfig.role}, I'm currently operating in basic mode with limited AI capabilities. I can still assist you with fundamental tasks. Please let me know how I can help.`;
   }
 
   generateSystemPrompt(agentConfig) {
     const {
       role,
-      personality,
-      customization
+      personality = {},
+      customization = {}
     } = agentConfig;
 
     return `You are an AI assistant with the following configuration:
 Role: ${role}
-Personality Trait: ${personality.trait}
-Communication Style: ${personality.communicationStyle}
-Response Style: ${personality.responseStyle}
-Voice Tone: ${customization.voiceTone}
-Decision Making: ${customization.decisionMaking}
+Personality Trait: ${personality.trait || 'Professional'}
+Communication Style: ${personality.communicationStyle || 'Clear and Direct'}
+Response Style: ${personality.responseStyle || 'Helpful'}
+Voice Tone: ${customization.voiceTone || 'Professional'}
+Decision Making: ${customization.decisionMaking || 'balanced'}
 
 Please respond to all messages in a way that reflects these characteristics.`;
   }
