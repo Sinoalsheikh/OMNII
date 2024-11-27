@@ -1,45 +1,42 @@
-
-
-
 const mongoose = require('mongoose');
 
-const AgentSchema = new mongoose.Schema({
+const agentSchema = new mongoose.Schema({
   name: {
     type: String,
     required: true,
     trim: true
   },
-  role: {
-    type: String,
-    required: true,
-    trim: true
-  },
-  skills: [{
-    type: String,
-    trim: true
-  }],
   avatar: {
     type: String,
-    default: 'default-avatar.png'
+    trim: true
+  },
+  role: {
+    type: String,
+    required: true
   },
   description: {
     type: String,
     trim: true
   },
+  owner: {
+    type: mongoose.Schema.Types.ObjectId,
+    required: true,
+    ref: 'User'
+  },
   personality: {
-    type: {
-      trait: String,
-      communicationStyle: String,
-      responseStyle: String
-    },
-    required: true
+    trait: String,
+    communicationStyle: String,
+    responseStyle: String
   },
   customization: {
     voiceTone: String,
     decisionMaking: {
       type: String,
-      enum: ['conservative', 'balanced', 'aggressive'],
       default: 'balanced'
+    },
+    webhookEnabled: {
+      type: Boolean,
+      default: false
     }
   },
   scripts: [{
@@ -51,65 +48,127 @@ const AgentSchema = new mongoose.Schema({
   tasks: [{
     title: String,
     description: String,
-    status: {
-      type: String,
-      enum: ['pending', 'in-progress', 'completed', 'failed'],
-      default: 'pending'
-    },
     priority: {
       type: String,
       enum: ['low', 'medium', 'high'],
       default: 'medium'
     },
     dueDate: Date,
-    completedAt: Date
+    status: {
+      type: String,
+      enum: ['pending', 'in_progress', 'completed'],
+      default: 'pending'
+    }
   }],
   workflows: [{
     name: String,
     description: String,
     triggers: [{
       event: String,
-      conditions: Object
+      conditions: mongoose.Schema.Types.Mixed
     }],
     actions: [{
       type: String,
-      parameters: Object
+      parameters: mongoose.Schema.Types.Mixed
     }],
     status: {
       type: String,
-      enum: ['active', 'inactive', 'error'],
+      enum: ['active', 'inactive'],
       default: 'active'
     }
   }],
-  performance: {
-    responseTime: Number,
-    taskCompletionRate: Number,
-    customerSatisfaction: Number,
-    accuracyScore: Number,
-    lastEvaluation: Date
-  },
+  skills: [String],
   communication: {
     channels: [{
-      type: String,
-      status: String,
-      lastActive: Date
+      type: {
+        type: String,
+        enum: ['email', 'chat', 'voice']
+      },
+      status: {
+        type: String,
+        enum: ['active', 'inactive'],
+        default: 'active'
+      }
     }],
     languages: [{
       code: String,
-      proficiency: String
+      proficiency: {
+        type: String,
+        enum: ['basic', 'intermediate', 'fluent'],
+        default: 'fluent'
+      }
     }]
   },
-  user: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'User',
-    required: true
+  performance: {
+    responseTime: {
+      type: Number,
+      default: 0
+    },
+    taskCompletionRate: {
+      type: Number,
+      default: 0
+    },
+    customerSatisfaction: {
+      type: Number,
+      default: 0
+    },
+    accuracyScore: {
+      type: Number,
+      default: 0
+    }
   },
-  createdAt: {
-    type: Date,
-    default: Date.now
+  integrations: [String],
+  aiModel: {
+    type: String,
+    default: 'gpt-4'
+  },
+  learningRate: {
+    type: Number,
+    default: 50,
+    min: 0,
+    max: 100
+  },
+  autonomyLevel: {
+    type: Number,
+    default: 50,
+    min: 0,
+    max: 100
+  },
+  communicationSkill: {
+    type: Number,
+    default: 50,
+    min: 0,
+    max: 100
+  },
+  problemSolving: {
+    type: Number,
+    default: 50,
+    min: 0,
+    max: 100
+  },
+  deployment: {
+    autoStart: {
+      type: Boolean,
+      default: false
+    },
+    monitoring: {
+      type: Boolean,
+      default: true
+    },
+    logging: {
+      type: Boolean,
+      default: true
+    }
   }
+}, {
+  timestamps: true
 });
 
-module.exports = mongoose.model('Agent', AgentSchema);
+// Add indexes for better query performance
+agentSchema.index({ owner: 1 });
+agentSchema.index({ 'tasks.status': 1 });
+agentSchema.index({ 'workflows.status': 1 });
 
+const Agent = mongoose.model('Agent', agentSchema);
 
+module.exports = Agent;
