@@ -8,6 +8,10 @@ import {
   Button,
   Typography,
   Alert,
+  Select,
+  MenuItem,
+  FormControl,
+  InputLabel,
 } from '@mui/material';
 import authService from '../services/authService';
 
@@ -18,9 +22,22 @@ const Register = () => {
     email: '',
     password: '',
     confirmPassword: '',
+    department: 'General',
+    role: 'user'
   });
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(false);
+
+  const departments = [
+    'General',
+    'HR',
+    'Finance',
+    'Sales',
+    'Marketing',
+    'Operations',
+    'R&D',
+    'Customer_Service'
+  ];
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -41,18 +58,23 @@ const Register = () => {
     setLoading(true);
 
     try {
+      console.log('Submitting registration:', { ...formData, password: '[HIDDEN]' });
       const response = await authService.register({
         username: formData.username,
         email: formData.email,
         password: formData.password,
+        department: formData.department,
+        role: formData.role
       });
       
-      // Store token if provided (for auto-verification testing)
+      console.log('Registration response:', response);
+
+      // Store token if provided
       if (response.token) {
         localStorage.setItem('token', response.token);
         navigate('/');
       } else {
-        // Show success message and redirect to login for email verification flow
+        // Show success message and redirect to login
         alert(response.message || 'Registration successful! Please check your email to verify your account.');
         navigate('/login');
       }
@@ -117,6 +139,22 @@ const Register = () => {
               required
               autoComplete="email"
             />
+
+            <FormControl fullWidth margin="normal">
+              <InputLabel>Department</InputLabel>
+              <Select
+                name="department"
+                value={formData.department}
+                onChange={handleChange}
+                label="Department"
+              >
+                {departments.map((dept) => (
+                  <MenuItem key={dept} value={dept}>
+                    {dept.replace('_', ' ')}
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
             
             <TextField
               fullWidth

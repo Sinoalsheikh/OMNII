@@ -30,7 +30,7 @@ const validateAgentData = (req, res, next) => {
 router.post('/', [auth, validateAgentData], asyncHandler(async (req, res) => {
   const agent = new Agent({
     ...req.body,
-    owner: req.user._id,
+    owner: req.user.userId,
     deployment: {
       ...req.body.deployment,
       status: 'pending'
@@ -58,7 +58,7 @@ router.post('/', [auth, validateAgentData], asyncHandler(async (req, res) => {
 
 // Get all agents for the authenticated user with filtering and pagination
 router.get('/', auth, asyncHandler(async (req, res) => {
-  const match = { owner: req.user._id };
+  const match = { owner: req.user.userId };
   const sort = {};
 
   // Apply filters
@@ -96,7 +96,7 @@ router.get('/', auth, asyncHandler(async (req, res) => {
 
 // Get a specific agent
 router.get('/:id', auth, asyncHandler(async (req, res) => {
-  const agent = await Agent.findOne({ _id: req.params.id, owner: req.user._id });
+  const agent = await Agent.findOne({ _id: req.params.id, owner: req.user.userId });
   
   if (!agent) {
     return res.status(404).json({ error: 'Agent not found' });
@@ -125,7 +125,7 @@ router.patch('/:id', [auth, validateAgentData], asyncHandler(async (req, res) =>
     return res.status(400).json({ error: 'Invalid updates' });
   }
 
-  const agent = await Agent.findOne({ _id: req.params.id, owner: req.user._id });
+  const agent = await Agent.findOne({ _id: req.params.id, owner: req.user.userId });
   if (!agent) {
     return res.status(404).json({ error: 'Agent not found' });
   }
@@ -151,7 +151,7 @@ router.patch('/:id', [auth, validateAgentData], asyncHandler(async (req, res) =>
 
 // Delete an agent
 router.delete('/:id', auth, asyncHandler(async (req, res) => {
-  const agent = await Agent.findOne({ _id: req.params.id, owner: req.user._id });
+  const agent = await Agent.findOne({ _id: req.params.id, owner: req.user.userId });
   
   if (!agent) {
     return res.status(404).json({ error: 'Agent not found' });
@@ -179,7 +179,7 @@ router.post('/:id/process', auth, asyncHandler(async (req, res) => {
     return res.status(400).json({ error: 'Message is required' });
   }
 
-  const agent = await Agent.findOne({ _id: req.params.id, owner: req.user._id });
+  const agent = await Agent.findOne({ _id: req.params.id, owner: req.user.userId });
   if (!agent) {
     return res.status(404).json({ error: 'Agent not found' });
   }
@@ -203,7 +203,7 @@ router.post('/:id/process', auth, asyncHandler(async (req, res) => {
 
 // Execute a workflow
 router.post('/:id/workflow/:workflowId', auth, asyncHandler(async (req, res) => {
-  const agent = await Agent.findOne({ _id: req.params.id, owner: req.user._id });
+  const agent = await Agent.findOne({ _id: req.params.id, owner: req.user.userId });
   
   if (!agent) {
     return res.status(404).json({ error: 'Agent not found' });
@@ -233,7 +233,7 @@ router.post('/:id/workflow/:workflowId', auth, asyncHandler(async (req, res) => 
 
 // Get agent performance metrics
 router.get('/:id/metrics', auth, asyncHandler(async (req, res) => {
-  const agent = await Agent.findOne({ _id: req.params.id, owner: req.user._id });
+  const agent = await Agent.findOne({ _id: req.params.id, owner: req.user.userId });
   
   if (!agent) {
     return res.status(404).json({ error: 'Agent not found' });

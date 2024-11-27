@@ -1,22 +1,81 @@
 require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
-const connectDB = require('./config/database');
+const mongoose = require('mongoose');
+const { connectDB, disconnectDB } = require('./config/database');
+const { openai, testConfig } = require('./config/openai');
 const agentService = require('./services/agentService');
 
-// Connect to MongoDB
-connectDB();
+// Test OpenAI configuration
+(async () => {
+  try {
+    const openAiConfigValid = await testConfig();
+    if (!openAiConfigValid) {
+      console.warn('OpenAI configuration test failed. AI features may be limited.');
+    } else {
+      console.log('OpenAI configuration validated successfully');
+    }
+  } catch (error) {
+    console.warn('Error testing OpenAI configuration:', error.message);
+  }
+})();
 
 const app = express();
+let dbConnected = false;
+
+// Connect to MongoDB
+(async () => {
+  try {
+    const connected = await connectDB();
+    if (!connected) {
+      console.warn('Failed to connect to MongoDB. Running in limited mode (no persistence).');
+    } else {
+      dbConnected = true;
+      console.log('MongoDB connected successfully');
+    }
+  } catch (error) {
+    console.warn('Error connecting to MongoDB:', error);
+    console.warn('Running in limited mode (no persistence).');
+  }
+})();
+
 const port = process.env.PORT || 5002;
 
 // Middleware
-app.use(cors());
+app.use(cors({
+  origin: process.env.FRONTEND_URL || 'http://localhost:3000',
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization']
+}));
 app.use(express.json());
 
+// Request logging middleware
+app.use((req, res, next) => {
+  console.log(`${new Date().toISOString()} - ${req.method} ${req.url}`);
+  next();
+});
+
+// Middleware to check database connection
+const checkDbConnection = (req, res, next) => {
+  if (!dbConnected && req.method !== 'GET') {
+    return res.status(503).json({
+      error: 'Service temporarily unavailable',
+      details: 'Database connection is not established. Please try again later.'
+    });
+  }
+  next();
+};
+
 // Routes
+const authRoutes = require('./routes/auth');
 const agentRoutes = require('./routes/agents');
-app.use('/api/agents', agentRoutes);
+
+// Apply auth middleware to protected routes
+const authMiddleware = require('./middleware/auth');
+
+app.use('/api/auth', authRoutes);
+app.use('/api/agents', authMiddleware, checkDbConnection, agentRoutes);
 
 // Test route
 app.get('/api/test', (req, res) => {
@@ -74,18 +133,13 @@ const shutdown = async () => {
   console.log('Received shutdown signal. Starting graceful shutdown...');
   
   // Close the HTTP server
-  server.close(() => {
+  server.close(async () => {
     console.log('HTTP server closed.');
     
-    // Close database connection
-    if (mongoose.connection.readyState === 1) {
-      mongoose.connection.close(false, () => {
-        console.log('MongoDB connection closed.');
-        process.exit(0);
-      });
-    } else {
-      process.exit(0);
-    }
+    // Close database connection using the new disconnectDB function
+    await disconnectDB();
+    console.log('MongoDB connection closed.');
+    process.exit(0);
   });
 
   // Force close after 10 seconds

@@ -2,16 +2,13 @@
 
 const nodemailer = require('nodemailer');
 
-// Create a transporter using SMTP
-const transporter = nodemailer.createTransport({
-  host: process.env.EMAIL_HOST,
-  port: process.env.EMAIL_PORT,
-  secure: process.env.EMAIL_SECURE === 'true', // true for 465, false for other ports
-  auth: {
-    user: process.env.EMAIL_USER,
-    pass: process.env.EMAIL_PASS,
-  },
-});
+// Create a mock transporter for testing
+const transporter = {
+  sendMail: async (mailOptions) => {
+    console.log('Mock email sent:', mailOptions);
+    return Promise.resolve({ response: 'Mock email sent successfully' });
+  }
+};
 
 // Function to send password reset email
 const sendPasswordResetEmail = async (to, resetToken) => {

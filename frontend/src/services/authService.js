@@ -25,8 +25,12 @@ axios.interceptors.response.use(
   (response) => response,
   (error) => {
     if (error.response?.status === 401) {
-      localStorage.removeItem('token');
-      window.location.href = '/login';
+      // Clear token and redirect to login only if not already on login page
+      if (!window.location.pathname.includes('/login')) {
+        localStorage.removeItem('token');
+        localStorage.removeItem('user');
+        window.location.href = '/login';
+      }
     }
     return Promise.reject(error);
   }
@@ -34,29 +38,61 @@ axios.interceptors.response.use(
 
 const authService = {
   login: async (email, password) => {
-    const response = await axios.post(`${API_URL}/api/auth/login`, {
-      email,
-      password,
-    });
-    if (response.data.token) {
-      localStorage.setItem('token', response.data.token);
+    try {
+      console.log('Attempting login for:', email);
+      const response = await axios.post(`${API_URL}/api/auth/login`, {
+        email,
+        password,
+      });
+      console.log('Login response:', response.data);
+      
+      if (response.data.token) {
+        localStorage.setItem('token', response.data.token);
+        localStorage.setItem('user', JSON.stringify(response.data.user));
+      }
+      return response.data;
+    } catch (error) {
+      console.error('Login error:', error.response?.data || error.message);
+      throw error;
     }
-    return response.data;
   },
 
   logout: () => {
     localStorage.removeItem('token');
+    localStorage.removeItem('user');
     window.location.href = '/login';
   },
 
   register: async (userData) => {
-    const response = await axios.post(`${API_URL}/api/auth/register`, userData);
-    return response.data;
+    try {
+      console.log('Attempting registration:', { ...userData, password: '[HIDDEN]' });
+      const response = await axios.post(`${API_URL}/api/auth/register`, userData);
+      console.log('Registration response:', response.data);
+      
+      if (response.data.token) {
+        localStorage.setItem('token', response.data.token);
+        localStorage.setItem('user', JSON.stringify(response.data.user));
+      }
+      return response.data;
+    } catch (error) {
+      console.error('Registration error:', error.response?.data || error.message);
+      throw error;
+    }
   },
 
   isAuthenticated: () => {
-    return !!localStorage.getItem('token');
+    const token = localStorage.getItem('token');
+    return !!token;
   },
+
+  getUser: () => {
+    const userStr = localStorage.getItem('user');
+    return userStr ? JSON.parse(userStr) : null;
+  },
+
+  getToken: () => {
+    return localStorage.getItem('token');
+  }
 };
 
 export default authService;

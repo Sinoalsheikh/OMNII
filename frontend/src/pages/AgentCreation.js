@@ -212,7 +212,7 @@ const AgentCreation = () => {
       // history.push('/agents');
     } catch (error) {
       console.error('Deployment error:', error);
-      setDeploymentError(error.message);
+      setDeploymentError(error.response?.data?.error || error.message);
     } finally {
       setIsDeploying(false);
     }
@@ -279,6 +279,14 @@ const [agentData, setAgentData] = useState({
   });
 
   const handleNext = () => {
+    // Validate required fields based on current step
+    if (activeStep === 0) {
+      if (!agentData.name || !agentData.role || !agentData.aiModel) {
+        setDeploymentError('Please fill in all required fields: Name, Role, and AI Model');
+        return;
+      }
+    }
+    setDeploymentError(null);
     setActiveStep((prevStep) => prevStep + 1);
   };
 
@@ -455,7 +463,7 @@ case 1:
                       <Autocomplete
                         multiple
                         options={languages}
-                        value={agentData.communication.languages}
+                        value={agentData.communication.languages.map(lang => lang.code)}
                         onChange={(e, newValue) => setAgentData({
                           ...agentData,
                           communication: {
@@ -473,7 +481,8 @@ case 1:
                         renderTags={(value, getTagProps) =>
                           value.map((option, index) => (
                             <Chip
-                              label={option.code}
+                              key={option}
+                              label={option}
                               {...getTagProps({ index })}
                               icon={<LanguageIcon />}
                             />

@@ -27,8 +27,38 @@ const UserSchema = new mongoose.Schema({
   },
   role: {
     type: String,
-    enum: ['user', 'admin'],
+    enum: ['user', 'admin', 'hr_manager', 'finance_manager', 'sales_manager', 'marketing_manager', 'operations_manager', 'rd_manager', 'customer_service_manager'],
     default: 'user'
+  },
+  department: {
+    type: String,
+    enum: ['HR', 'Finance', 'Sales', 'Marketing', 'Operations', 'R&D', 'Customer_Service', 'General'],
+    default: 'General'
+  },
+  permissions: [{
+    module: {
+      type: String,
+      enum: ['HR', 'Finance', 'Sales', 'Marketing', 'Operations', 'R&D', 'Customer_Service']
+    },
+    actions: [{
+      type: String,
+      enum: ['read', 'write', 'delete', 'admin']
+    }]
+  }],
+  mfaEnabled: {
+    type: Boolean,
+    default: false
+  },
+  mfaSecret: String,
+  lastLogin: Date,
+  loginAttempts: {
+    count: { type: Number, default: 0 },
+    lastAttempt: Date
+  },
+  status: {
+    type: String,
+    enum: ['active', 'inactive', 'suspended'],
+    default: 'active'
   },
   isVerified: {
     type: Boolean,

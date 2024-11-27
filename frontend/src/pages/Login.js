@@ -9,9 +9,7 @@ import {
   Typography,
   Alert,
 } from '@mui/material';
-import axios from 'axios';
-
-const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5002';
+import authService from '../services/authService';
 
 const Login = () => {
   const navigate = useNavigate();
@@ -28,15 +26,14 @@ const Login = () => {
     setLoading(true);
 
     try {
-      const response = await axios.post(`${API_URL}/api/auth/login`, formData);
-      const { token } = response.data;
+      console.log('Submitting login:', { email: formData.email, password: '[HIDDEN]' });
+      const response = await authService.login(formData.email, formData.password);
+      console.log('Login successful:', response);
       
-      // Store the token
-      localStorage.setItem('token', token);
-      
-      // Redirect to the previous page or dashboard
-      navigate(-1);
+      // Redirect to dashboard
+      navigate('/');
     } catch (error) {
+      console.error('Login error:', error);
       setError(error.response?.data?.error || 'Failed to login. Please try again.');
     } finally {
       setLoading(false);
@@ -82,6 +79,7 @@ const Login = () => {
               onChange={handleChange}
               margin="normal"
               required
+              autoComplete="email"
             />
             
             <TextField
@@ -93,6 +91,7 @@ const Login = () => {
               onChange={handleChange}
               margin="normal"
               required
+              autoComplete="current-password"
             />
 
             <Button
