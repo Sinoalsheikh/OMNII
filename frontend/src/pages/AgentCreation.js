@@ -118,8 +118,87 @@ const AgentCreation = () => {
   const [isDeploying, setIsDeploying] = useState(false);
   const [deploymentError, setDeploymentError] = useState(null);
 
+  const [serviceStatus, setServiceStatus] = useState({ 
+    available: true, 
+    message: null, 
+    mode: 'normal',
+    features: {
+      ai: true,
+      persistence: true
+    }
+  });
+
+  useEffect(() => {
+    // Check service status on component mount
+    const checkServiceStatus = async () => {
+      try {
+        // First check database status
+        await agentService.getAgents();
+        
+        setServiceStatus({ 
+          available: true, 
+          message: 'AI features are currently limited. Your agent will be created with basic functionality.',
+          mode: 'limited',
+          features: {
+            ai: false,
+            persistence: true
+          }
+        });
+      } catch (error) {
+        let newStatus = {
+          available: false,
+          features: {
+            ai: false,
+            persistence: true
+          }
+        };
+
+        if (error.code === 503) {
+          newStatus = {
+            ...newStatus,
+            message: 'The database is currently running in memory mode. Your agents will not persist after server restart.',
+            mode: 'memory',
+            features: { ...newStatus.features, persistence: false }
+          };
+        } else if (error.code === 401) {
+          newStatus = {
+            ...newStatus,
+            message: 'Please log in to create and manage agents.',
+            mode: 'auth',
+            features: { ai: false, persistence: false }
+          };
+        } else {
+          newStatus = {
+            ...newStatus,
+            message: 'The service is currently unavailable. Please try again later.',
+            mode: 'error',
+            features: { ai: false, persistence: false }
+          };
+        }
+
+        setServiceStatus(newStatus);
+      }
+    };
+
+    checkServiceStatus();
+  }, []);
+
+  // Disable certain features based on service status
+  const getFeatureAvailability = () => ({
+    aiFeatures: serviceStatus.features.ai,
+    persistence: serviceStatus.features.persistence,
+    deployment: serviceStatus.mode !== 'error'
+  });
+
+  const { aiFeatures, persistence, deployment } = getFeatureAvailability();
+
   const handleDeploy = async () => {
     try {
+      if (!serviceStatus.available) {
+        setDeploymentError('Cannot create agent: Database service is unavailable');
+        return;
+      }
+
       setIsDeploying(true);
       setDeploymentError(null);
 
@@ -1013,12 +1092,45 @@ const handleScriptSubmit = () => {
 
   return (
     <Box>
-      <Typography variant="h4" gutterBottom>
-        Create AI Agent
-      </Typography>
-      <Typography variant="body1" color="text.secondary" paragraph>
-        Design and configure your AI agent with advanced capabilities, personality traits, and workflow automation.
-      </Typography>
+      <Box sx={{ mb: 4 }}>
+        <Typography variant="h4" gutterBottom>
+          Create AI Agent
+        </Typography>
+        <Typography variant="body1" color="text.secondary" paragraph>
+          Design and configure your AI agent with advanced capabilities, personality traits, and workflow automation.
+        </Typography>
+        {serviceStatus.message && (
+          <Alert 
+            severity={
+              serviceStatus.mode === 'memory' ? 'info' : 
+              serviceStatus.mode === 'auth' ? 'info' :
+              serviceStatus.mode === 'limited' ? 'warning' : 
+              serviceStatus.mode === 'error' ? 'error' : 
+              'info'
+            } 
+            sx={{ mt: 2 }}
+            action={
+              serviceStatus.mode === 'auth' && (
+                <Button color="inherit" size="small" href="/login">
+                  Login
+                </Button>
+              )
+            }
+          >
+            {serviceStatus.message}
+            {!aiFeatures && (
+              <Typography variant="caption" display="block" sx={{ mt: 1 }}>
+                • AI-powered features like natural language processing and learning capabilities will be limited
+              </Typography>
+            )}
+            {!persistence && (
+              <Typography variant="caption" display="block">
+                • Agent data will not persist after server restart
+              </Typography>
+            )}
+          </Alert>
+        )}
+      </Box>
 
       <Card sx={{ mt: 3 }}>
         <CardContent>
@@ -1038,27 +1150,55 @@ const handleScriptSubmit = () => {
             </Alert>
           )}
 
-          <Box sx={{ display: 'flex', justifyContent: 'flex-end', mt: 3 }}>
-            <Button
-              disabled={activeStep === 0}
-              onClick={handleBack}
-              sx={{ mr: 1 }}
-            >
-              Back
-            </Button>
-            <Button
-variant="contained"
-              onClick={activeStep === steps.length - 1 ? handleDeploy : handleNext}
-            >
-              {activeStep === steps.length - 1 ? (
-                <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                  {isDeploying ? (
-                    <CircularProgress size={24} sx={{ mr: 1 }} />
-                  ) : null}
-                  Deploy Agent
-                </Box>
-              ) : 'Next'}
-            </Button>
+          <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 3 }}>
+            <Box>
+              {!aiFeatures && (
+                <Tooltip title="Some AI features will be limited">
+                  <Chip 
+                    icon={<ErrorIcon />} 
+                    label="Limited AI" 
+                    color="warning" 
+                    variant="outlined" 
+                    size="small"
+                    sx={{ mr: 1 }}
+                  />
+                </Tooltip>
+              )}
+              {!persistence && (
+                <Tooltip title="Data will not persist after server restart">
+                  <Chip 
+                    icon={<ErrorIcon />} 
+                    label="In-Memory Mode" 
+                    color="info" 
+                    variant="outlined" 
+                    size="small"
+                  />
+                </Tooltip>
+              )}
+            </Box>
+            <Box>
+              <Button
+                disabled={activeStep === 0}
+                onClick={handleBack}
+                sx={{ mr: 1 }}
+              >
+                Back
+              </Button>
+              <Button
+                variant="contained"
+                disabled={!deployment}
+                onClick={activeStep === steps.length - 1 ? handleDeploy : handleNext}
+              >
+                {activeStep === steps.length - 1 ? (
+                  <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                    {isDeploying ? (
+                      <CircularProgress size={24} sx={{ mr: 1 }} />
+                    ) : null}
+                    Deploy Agent
+                  </Box>
+                ) : 'Next'}
+              </Button>
+            </Box>
           </Box>
         </CardContent>
       </Card>
