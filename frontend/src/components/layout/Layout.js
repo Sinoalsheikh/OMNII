@@ -19,6 +19,8 @@ import {
   Person as PersonIcon,
   Analytics as AnalyticsIcon,
   Settings as SettingsIcon,
+  AccountTree as WorkflowIcon,
+  MonetizationOn as AffiliateIcon,
 } from '@mui/icons-material';
 
 const drawerWidth = 240;
@@ -26,7 +28,9 @@ const drawerWidth = 240;
 const menuItems = [
   { text: 'Dashboard', icon: <DashboardIcon />, path: '/' },
   { text: 'Create Agent', icon: <PersonIcon />, path: '/create-agent' },
+  { text: 'Workflows', icon: <WorkflowIcon />, path: '/workflows' },
   { text: 'Analytics', icon: <AnalyticsIcon />, path: '/analytics' },
+  { text: 'Affiliate Program', icon: <AffiliateIcon />, path: '/affiliate' },
   { text: 'Settings', icon: <SettingsIcon />, path: '/settings' },
 ];
 

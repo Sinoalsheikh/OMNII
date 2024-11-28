@@ -14,8 +14,60 @@ router.get('/', async (req, res) => {
   }
 });
 
+// Validation middleware
+const validateAgent = (req, res, next) => {
+  const errors = [];
+  const { aiModel, skills, communication } = req.body;
+
+  // Validate AI Model
+  if (aiModel) {
+    if (!aiModel.type) {
+      errors.push('AI model type is required');
+    }
+    if (aiModel.capabilities) {
+      aiModel.capabilities.forEach((cap, index) => {
+        if (!cap.name) errors.push(`Capability ${index + 1} name is required`);
+        if (!cap.description) errors.push(`Capability ${index + 1} description is required`);
+      });
+    }
+    if (aiModel.knowledgeBase) {
+      aiModel.knowledgeBase.forEach((kb, index) => {
+        if (!kb.name) errors.push(`Knowledge base ${index + 1} name is required`);
+        if (!kb.category) errors.push(`Knowledge base ${index + 1} category is required`);
+      });
+    }
+  }
+
+  // Validate Skills
+  if (skills) {
+    skills.forEach((skill, index) => {
+      if (!skill.name) errors.push(`Skill ${index + 1} name is required`);
+      if (!skill.category) errors.push(`Skill ${index + 1} category is required`);
+      if (skill.proficiency < 0 || skill.proficiency > 100) {
+        errors.push(`Skill ${index + 1} proficiency must be between 0 and 100`);
+      }
+    });
+  }
+
+  // Validate Communication Channels
+  if (communication?.channels) {
+    communication.channels.forEach((channel, index) => {
+      if (!channel.type) errors.push(`Channel ${index + 1} type is required`);
+      if (!['chat', 'email', 'voice', 'video', 'sms'].includes(channel.type)) {
+        errors.push(`Channel ${index + 1} type must be one of: chat, email, voice, video, sms`);
+      }
+    });
+  }
+
+  if (errors.length > 0) {
+    return res.status(400).json({ errors });
+  }
+
+  next();
+};
+
 // Create a new agent
-router.post('/', async (req, res) => {
+router.post('/', validateAgent, async (req, res) => {
   try {
     const agentData = {
       ...req.body,
@@ -64,7 +116,7 @@ router.get('/:id', async (req, res) => {
 });
 
 // Update agent
-router.put('/:id', async (req, res) => {
+router.put('/:id', validateAgent, async (req, res) => {
   try {
     const agent = await Agent.findOne({ _id: req.params.id, owner: req.user.userId });
     if (!agent) {

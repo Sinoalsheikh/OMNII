@@ -70,12 +70,29 @@ const checkDbConnection = (req, res, next) => {
 // Routes
 const authRoutes = require('./routes/auth');
 const agentRoutes = require('./routes/agents');
+const voiceRoutes = require('./routes/voice');
+const workflowRoutes = require('./routes/workflows');
+const trainingRoutes = require('./routes/training');
+const affiliateRoutes = require('./routes/affiliates');
 
 // Apply auth middleware to protected routes
 const authMiddleware = require('./middleware/auth');
 
+// Configure static file serving for audio files
+const fs = require('fs');
+const path = require('path');
+const audioDir = path.join(__dirname, 'audio');
+if (!fs.existsSync(audioDir)) {
+  fs.mkdirSync(audioDir);
+}
+app.use('/audio', express.static('audio'));
+
 app.use('/api/auth', authRoutes);
 app.use('/api/agents', authMiddleware, checkDbConnection, agentRoutes);
+app.use('/api/voice', authMiddleware, checkDbConnection, voiceRoutes);
+app.use('/api/workflows', authMiddleware, checkDbConnection, workflowRoutes);
+app.use('/api/training', authMiddleware, checkDbConnection, trainingRoutes);
+app.use('/api/affiliates', authMiddleware, checkDbConnection, affiliateRoutes);
 
 // Test route
 app.get('/api/test', (req, res) => {

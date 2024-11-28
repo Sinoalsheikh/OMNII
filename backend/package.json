@@ -12,6 +12,7 @@
   "license": "ISC",
   "description": "",
   "dependencies": {
+    "@google-cloud/text-to-speech": "^5.6.0",
     "bcryptjs": "^2.4.3",
     "cors": "^2.8.5",
     "dotenv": "^16.4.5",
@@ -21,8 +22,9 @@
     "mongoose": "^8.8.3",
     "nodemailer": "^6.9.16",
     "openai": "^4.73.1",
+    "qrcode": "^1.5.3",
     "speakeasy": "^2.0.0",
-    "qrcode": "^1.5.3"
+    "twilio": "^5.3.6"
   },
   "devDependencies": {
     "nodemon": "^3.1.7"

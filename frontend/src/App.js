@@ -11,6 +11,10 @@ import Dashboard from './pages/Dashboard';
 import AgentCreation from './pages/AgentCreation';
 import Analytics from './pages/Analytics';
 import Settings from './pages/Settings';
+import Chat from './pages/Chat';
+import AgentTraining from './pages/AgentTraining';
+import Workflows from './pages/Workflows';
+import AffiliateDashboard from './pages/AffiliateDashboard';
 import Login from './pages/Login';
 import Register from './pages/Register';
 
@@ -134,6 +138,34 @@ function App() {
             <ProtectedRoute>
               <Layout>
                 <Settings />
+              </Layout>
+            </ProtectedRoute>
+          } />
+          <Route path="/chat/:agentId" element={
+            <ProtectedRoute>
+              <Layout>
+                <Chat />
+              </Layout>
+            </ProtectedRoute>
+          } />
+          <Route path="/agent/:agentId/training" element={
+            <ProtectedRoute>
+              <Layout>
+                <AgentTraining />
+              </Layout>
+            </ProtectedRoute>
+          } />
+          <Route path="/workflows" element={
+            <ProtectedRoute>
+              <Layout>
+                <Workflows />
+              </Layout>
+            </ProtectedRoute>
+          } />
+          <Route path="/affiliate" element={
+            <ProtectedRoute>
+              <Layout>
+                <AffiliateDashboard />
               </Layout>
             </ProtectedRoute>
           } />

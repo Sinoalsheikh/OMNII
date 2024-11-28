@@ -43,7 +43,42 @@ const agentSchema = new mongoose.Schema({
     name: String,
     content: String,
     trigger: String,
-    category: String
+    category: String,
+    version: Number,
+    lastUsed: Date,
+    successRate: Number,
+    feedback: [{
+      rating: Number,
+      comment: String,
+      timestamp: Date
+    }],
+    salesPhase: {
+      type: String,
+      enum: ['introduction', 'discovery', 'presentation', 'handling_objections', 'closing', 'follow_up']
+    },
+    effectiveness: {
+      type: Number,
+      default: 0,
+      min: 0,
+      max: 100
+    }
+  }],
+  productKnowledge: [{
+    productId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Product'
+    },
+    proficiency: {
+      type: Number,
+      default: 80,
+      min: 0,
+      max: 100
+    },
+    keyFeatures: [String],
+    commonObjections: [{
+      objection: String,
+      response: String
+    }]
   }],
   tasks: [{
     title: String,
@@ -77,17 +112,57 @@ const agentSchema = new mongoose.Schema({
       default: 'active'
     }
   }],
-  skills: [String],
+  skills: [{
+    name: String,
+    proficiency: {
+      type: Number,
+      default: 50,
+      min: 0,
+      max: 100
+    },
+    description: String,
+    category: {
+      type: String,
+      enum: ['technical', 'soft', 'domain', 'language']
+    }
+  }],
   communication: {
     channels: [{
       type: {
         type: String,
-        enum: ['email', 'chat', 'voice']
+        enum: ['email', 'chat', 'voice', 'video', 'sms']
       },
       status: {
         type: String,
-        enum: ['active', 'inactive'],
+        enum: ['active', 'inactive', 'maintenance'],
         default: 'active'
+      },
+      preferences: {
+        responseTime: {
+          type: Number,
+          default: 60  // in seconds
+        },
+        autoReply: {
+          enabled: {
+            type: Boolean,
+            default: true
+          },
+          message: String
+        },
+        workingHours: {
+          enabled: {
+            type: Boolean,
+            default: false
+          },
+          schedule: [{
+            day: {
+              type: String,
+              enum: ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday']
+            },
+            start: String,
+            end: String
+          }]
+        }
       }
     }],
     languages: [{
@@ -102,7 +177,26 @@ const agentSchema = new mongoose.Schema({
   performance: {
     responseTime: {
       type: Number,
-      default: 0
+      default: 0,
+      history: [{
+        value: Number,
+        timestamp: Date
+      }]
+    },
+    adaptabilityScore: {
+      type: Number,
+      default: 50,
+      min: 0,
+      max: 100
+    },
+    learningProgress: {
+      type: Number,
+      default: 0,
+      history: [{
+        value: Number,
+        timestamp: Date,
+        milestone: String
+      }]
     },
     taskCompletionRate: {
       type: Number,
@@ -115,12 +209,75 @@ const agentSchema = new mongoose.Schema({
     accuracyScore: {
       type: Number,
       default: 0
+    },
+    salesMetrics: {
+      callsCompleted: {
+        type: Number,
+        default: 0
+      },
+      conversionRate: {
+        type: Number,
+        default: 0
+      },
+      averageDealSize: {
+        type: Number,
+        default: 0
+      },
+      totalRevenue: {
+        type: Number,
+        default: 0
+      },
+      objectionHandlingSuccess: {
+        type: Number,
+        default: 0,
+        min: 0,
+        max: 100
+      }
     }
   },
   integrations: [String],
   aiModel: {
     type: String,
-    default: 'gpt-4'
+    default: 'gpt-4',
+    capabilities: [{
+      name: String,
+      description: String,
+      enabled: {
+        type: Boolean,
+        default: true
+      },
+      parameters: mongoose.Schema.Types.Mixed
+    }],
+    knowledgeBase: [{
+      name: String,
+      description: String,
+      content: String,
+      category: String,
+      lastUpdated: Date
+    }],
+    trainingData: [{
+      type: String,
+      data: mongoose.Schema.Types.Mixed,
+      timestamp: Date
+    }],
+    customization: {
+      temperature: {
+        type: Number,
+        default: 0.7,
+        min: 0,
+        max: 2
+      },
+      maxTokens: {
+        type: Number,
+        default: 1000
+      },
+      topP: {
+        type: Number,
+        default: 1,
+        min: 0,
+        max: 1
+      }
+    }
   },
   learningRate: {
     type: Number,

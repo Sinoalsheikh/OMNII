@@ -38,7 +38,7 @@ const agentService = {
   },
 
   processMessage: async (agentId, message) => {
-    const response = await axios.post(`${API_URL}/api/agents/${agentId}/process`, {
+    const response = await axios.post(`${API_URL}/api/agents/${agentId}/interact`, {
       message
     }, {
       headers: getAuthHeader()
