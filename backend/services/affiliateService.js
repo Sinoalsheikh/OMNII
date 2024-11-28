@@ -1,5 +1,7 @@
 const AffiliateProgram = require('../models/AffiliateProgram');
 const { openai } = require('../config/openai');
+console.log('STRIPE_SECRET_KEY:', process.env.STRIPE_SECRET_KEY); // Log the Stripe secret key for debugging
+console.log('Initializing Stripe with key:', process.env.STRIPE_SECRET_KEY); // Log the Stripe secret key for debugging
 const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
 
 class AffiliateService {

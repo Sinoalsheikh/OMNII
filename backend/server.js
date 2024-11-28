@@ -1,10 +1,38 @@
-require('dotenv').config();
+// Import required modules
+const path = require('path');
+const fs = require('fs');
 const express = require('express');
 const cors = require('cors');
 const mongoose = require('mongoose');
+
+// Load environment variables
+require('dotenv').config({ path: path.join(__dirname, '.env') });
+console.log('Environment Variables after loading dotenv:', process.env);
+
+// Import application modules
 const { connectDB, disconnectDB } = require('./config/database');
 const { openai, testConfig } = require('./config/openai');
 const agentService = require('./services/agentService');
+
+// Import routes and middleware
+const authRoutes = require('./routes/auth');
+const agentRoutes = require('./routes/agents');
+const voiceRoutes = require('./routes/voice');
+const workflowRoutes = require('./routes/workflows');
+const trainingRoutes = require('./routes/training');
+const affiliateRoutes = require('./routes/affiliates');
+const authMiddleware = require('./middleware/auth');
+
+// Initialize Express app
+const app = express();
+let dbConnected = false;
+
+// Configure audio directory
+const audioDir = path.join(__dirname, 'audio');
+if (!fs.existsSync(audioDir)) {
+  fs.mkdirSync(audioDir);
+}
+app.use('/audio', express.static('audio'));
 
 // Test OpenAI configuration
 (async () => {

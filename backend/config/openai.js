@@ -1,3 +1,4 @@
+console.log('Environment Variables in openai.js:', process.env); // Log all environment variables for debugging
 const OpenAI = require('openai');
 
 const validateApiKey = (key) => {
@@ -8,6 +9,8 @@ const validateApiKey = (key) => {
 };
 
 // Initialize OpenAI client
+console.log('Environment Variables in openai.js:', process.env); // Log all environment variables for debugging
+console.log('OPENAI_API_KEY:', process.env.OPENAI_API_KEY); // Log the API key for debugging
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
   timeout: 30000, // 30 second timeout
