@@ -38,10 +38,11 @@ const ChatInterface = ({ agent }) => {
         };
         setMessages(prev => [...prev, agentMessage]);
       } else {
-        setError('Failed to get response from agent');
+        throw new Error(response.error || 'Failed to get response from agent');
       }
     } catch (error) {
-      setError(error.response?.data?.error || 'Error communicating with agent');
+      console.error('Chat error:', error);
+      setError(error.message || 'Error communicating with agent');
     } finally {
       setLoading(false);
     }
@@ -49,6 +50,27 @@ const ChatInterface = ({ agent }) => {
 
   return (
     <Box sx={{ height: '600px', display: 'flex', flexDirection: 'column' }}>
+      {/* Chat Header */}
+      <Paper 
+        elevation={1} 
+        sx={{ 
+          p: 2, 
+          mb: 2, 
+          bgcolor: 'primary.main', 
+          color: 'white',
+          display: 'flex',
+          alignItems: 'center',
+          gap: 1
+        }}
+      >
+        <Typography variant="h6">
+          {agent.name}
+        </Typography>
+        <Typography variant="body2" sx={{ opacity: 0.8 }}>
+          ({agent.traits})
+        </Typography>
+      </Paper>
+
       {/* Messages Area */}
       <Paper 
         elevation={3} 
@@ -60,6 +82,19 @@ const ChatInterface = ({ agent }) => {
           bgcolor: 'background.default'
         }}
       >
+        {/* Welcome Message */}
+        {messages.length === 0 && (
+          <Box sx={{ textAlign: 'center', color: 'text.secondary', mt: 2 }}>
+            <Typography variant="body1">
+              👋 Hi! I'm {agent.name}. {agent.purpose}
+            </Typography>
+            <Typography variant="body2" sx={{ mt: 1 }}>
+              How can I help you today?
+            </Typography>
+          </Box>
+        )}
+
+        {/* Chat Messages */}
         {messages.map((msg, index) => (
           <Box
             key={index}
@@ -76,20 +111,22 @@ const ChatInterface = ({ agent }) => {
                 p: 1.5,
                 maxWidth: '70%',
                 bgcolor: msg.role === 'user' ? 'primary.main' : 'background.paper',
-                color: msg.role === 'user' ? 'white' : 'text.primary'
+                color: msg.role === 'user' ? 'white' : 'text.primary',
+                borderRadius: msg.role === 'user' ? '12px 12px 0 12px' : '12px 12px 12px 0'
               }}
             >
               <Typography variant="body1">
                 {msg.content}
               </Typography>
-              {msg.mode === 'fallback' && (
-                <Typography variant="caption" color="warning.main">
-                  (Fallback Mode)
+              {msg.mode && msg.mode !== 'chat' && (
+                <Typography variant="caption" color="warning.main" sx={{ display: 'block', mt: 0.5 }}>
+                  ({msg.mode} mode)
                 </Typography>
               )}
             </Paper>
           </Box>
         ))}
+
         {loading && (
           <Box sx={{ display: 'flex', justifyContent: 'center', mt: 2 }}>
             <CircularProgress size={24} />
@@ -113,12 +150,18 @@ const ChatInterface = ({ agent }) => {
           value={message}
           onChange={(e) => setMessage(e.target.value)}
           disabled={loading}
+          sx={{
+            '& .MuiOutlinedInput-root': {
+              borderRadius: '24px'
+            }
+          }}
         />
         <Button
           type="submit"
           variant="contained"
           endIcon={<SendIcon />}
           disabled={loading || !message.trim()}
+          sx={{ borderRadius: '24px', px: 3 }}
         >
           Send
         </Button>

@@ -1,17 +1,34 @@
-
-
-
-
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import {
+  Box,
+  TextField,
+  Button,
+  FormControl,
+  Select,
+  MenuItem,
+  Alert,
+  Typography,
+  Paper
+} from '@mui/material';
+import agentService from '../services/agentService';
 
-const AgentCreationForm = ({ onAgentCreated }) => {
-  const [agentName, setAgentName] = useState('');
-  const [agentRole, setAgentRole] = useState('');
-  const [agentSkills, setAgentSkills] = useState('');
-  const [agentAvatar, setAgentAvatar] = useState('');
-  const [agentDescription, setAgentDescription] = useState('');
+const AgentCreationForm = () => {
+  const navigate = useNavigate();
+  const [formData, setFormData] = useState({
+    name: '',
+    traits: 'friendly',
+    purpose: ''
+  });
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+
+  const handleChange = (e) => {
+    setFormData({
+      ...formData,
+      [e.target.name]: e.target.value
+    });
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -19,107 +36,108 @@ const AgentCreationForm = ({ onAgentCreated }) => {
     setIsLoading(true);
 
     try {
-      const token = localStorage.getItem('token');
-      const response = await fetch('http://localhost:5002/api/agents', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify({
-          name: agentName,
-          role: agentRole,
-          skills: agentSkills.split(',').map(skill => skill.trim()),
-          avatar: agentAvatar,
-          description: agentDescription
-        }),
-      });
-
-      if (!response.ok) {
-        throw new Error('Failed to create agent');
-      }
-
-      const result = await response.json();
-      console.log('Agent created:', result);
-      setAgentName('');
-      setAgentRole('');
-      setAgentSkills('');
-      setAgentAvatar('');
-      setAgentDescription('');
-      if (onAgentCreated) {
-        onAgentCreated(result);
-      }
-    } catch (error) {
-      console.error('Error:', error);
-      setError('Failed to create agent. Please try again.');
+      const response = await agentService.createAgent(formData);
+      navigate(`/chat/${response.agent._id}`);
+    } catch (err) {
+      setError(err.response?.data?.error || 'Failed to create chatbot');
     } finally {
       setIsLoading(false);
     }
   };
 
   return (
-    <form onSubmit={handleSubmit}>
-      <h2>Create New Agent</h2>
-      {error && <p style={{ color: 'red' }}>{error}</p>}
-      <div>
-        <label htmlFor="agentName">Agent Name:</label>
-        <input
-          type="text"
-          id="agentName"
-          value={agentName}
-          onChange={(e) => setAgentName(e.target.value)}
+    <Box component="form" onSubmit={handleSubmit} sx={{ mt: 2 }}>
+      {error && (
+        <Alert severity="error" sx={{ mb: 4 }}>
+          {error}
+        </Alert>
+      )}
+
+      <Box sx={{ mb: 4 }}>
+        <Typography variant="h6" gutterBottom>
+          Name
+        </Typography>
+        <TextField
+          fullWidth
+          name="name"
+          placeholder="Give your chatbot a name"
+          value={formData.name}
+          onChange={handleChange}
           required
           disabled={isLoading}
+          sx={{
+            '& .MuiOutlinedInput-root': {
+              bgcolor: 'background.paper',
+              borderRadius: 2
+            }
+          }}
         />
-      </div>
-      <div>
-        <label htmlFor="agentRole">Agent Role:</label>
-        <input
-          type="text"
-          id="agentRole"
-          value={agentRole}
-          onChange={(e) => setAgentRole(e.target.value)}
+      </Box>
+
+      <Box sx={{ mb: 4 }}>
+        <Typography variant="h6" gutterBottom>
+          Personality
+        </Typography>
+        <FormControl fullWidth>
+          <Select
+            name="traits"
+            value={formData.traits}
+            onChange={handleChange}
+            required
+            disabled={isLoading}
+            sx={{
+              bgcolor: 'background.paper',
+              borderRadius: 2
+            }}
+          >
+            <MenuItem value="friendly">Friendly & Helpful</MenuItem>
+            <MenuItem value="professional">Professional & Formal</MenuItem>
+            <MenuItem value="casual">Casual & Relaxed</MenuItem>
+          </Select>
+        </FormControl>
+      </Box>
+
+      <Box sx={{ mb: 4 }}>
+        <Typography variant="h6" gutterBottom>
+          Purpose
+        </Typography>
+        <TextField
+          fullWidth
+          name="purpose"
+          placeholder="What will your chatbot help with? (e.g., General assistance, Customer support)"
+          value={formData.purpose}
+          onChange={handleChange}
           required
           disabled={isLoading}
+          multiline
+          rows={3}
+          sx={{
+            '& .MuiOutlinedInput-root': {
+              bgcolor: 'background.paper',
+              borderRadius: 2
+            }
+          }}
         />
-      </div>
-      <div>
-        <label htmlFor="agentSkills">Agent Skills (comma-separated):</label>
-        <input
-          type="text"
-          id="agentSkills"
-          value={agentSkills}
-          onChange={(e) => setAgentSkills(e.target.value)}
-          disabled={isLoading}
-        />
-      </div>
-      <div>
-        <label htmlFor="agentAvatar">Agent Avatar URL:</label>
-        <input
-          type="text"
-          id="agentAvatar"
-          value={agentAvatar}
-          onChange={(e) => setAgentAvatar(e.target.value)}
-          disabled={isLoading}
-        />
-      </div>
-      <div>
-        <label htmlFor="agentDescription">Agent Description:</label>
-        <textarea
-          id="agentDescription"
-          value={agentDescription}
-          onChange={(e) => setAgentDescription(e.target.value)}
-          disabled={isLoading}
-        />
-      </div>
-      <button type="submit" disabled={isLoading}>
-        {isLoading ? 'Creating...' : 'Create Agent'}
-      </button>
-    </form>
+      </Box>
+
+      <Button
+        type="submit"
+        variant="contained"
+        color="primary"
+        fullWidth
+        size="large"
+        disabled={isLoading}
+        sx={{
+          mt: 4,
+          py: 1.5,
+          borderRadius: 2,
+          fontSize: '1.1rem'
+        }}
+      >
+        {isLoading ? 'Creating Chatbot...' : 'Create Chatbot'}
+      </Button>
+    </Box>
   );
 };
 
 export default AgentCreationForm;
-
-
-

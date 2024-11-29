@@ -24,8 +24,9 @@ const affiliateRoutes = require('./routes/affiliates');
 const authMiddleware = require('./middleware/auth');
 
 // Initialize Express app
-const app = express();
 let dbConnected = false;
+
+const app = express();
 
 // Configure audio directory
 const audioDir = path.join(__dirname, 'audio');
@@ -47,9 +48,6 @@ app.use('/audio', express.static('audio'));
     console.warn('Error testing OpenAI configuration:', error.message);
   }
 })();
-
-const app = express();
-let dbConnected = false;
 
 // Connect to MongoDB
 (async () => {
@@ -106,26 +104,6 @@ const checkDbConnection = (req, res, next) => {
   }
   next();
 };
-
-// Routes
-const authRoutes = require('./routes/auth');
-const agentRoutes = require('./routes/agents');
-const voiceRoutes = require('./routes/voice');
-const workflowRoutes = require('./routes/workflows');
-const trainingRoutes = require('./routes/training');
-const affiliateRoutes = require('./routes/affiliates');
-
-// Apply auth middleware to protected routes
-const authMiddleware = require('./middleware/auth');
-
-// Configure static file serving for audio files
-const fs = require('fs');
-const path = require('path');
-const audioDir = path.join(__dirname, 'audio');
-if (!fs.existsSync(audioDir)) {
-  fs.mkdirSync(audioDir);
-}
-app.use('/audio', express.static('audio'));
 
 app.use('/api/auth', authRoutes);
 app.use('/api/agents', authMiddleware, checkDbConnection, agentRoutes);
@@ -216,7 +194,6 @@ process.on('unhandledRejection', (err) => {
 });
 
 // Handle uncaught exceptions
-process.on('uncaughtException', (err) => {
+process.on('uncaughtException', (err) => { 
   console.error('Uncaught Exception:', err);
-  shutdown();
 });

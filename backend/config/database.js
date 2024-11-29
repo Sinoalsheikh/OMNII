@@ -1,13 +1,8 @@
 const mongoose = require('mongoose');
-const { MongoMemoryServer } = require('mongodb-memory-server');
-
-let mongoServer;
 
 const connectDB = async () => {
   try {
-    // Start in-memory MongoDB server
-    mongoServer = await MongoMemoryServer.create();
-    const uri = mongoServer.getUri();
+    const uri = process.env.MONGODB_URI || 'mongodb://localhost:27017/omnii';
     
     const options = {
       useNewUrlParser: true,
@@ -18,12 +13,12 @@ const connectDB = async () => {
       family: 4
     };
 
-    console.log('Connecting to in-memory MongoDB...');
+    console.log('Connecting to MongoDB...');
     await mongoose.connect(uri, options);
     
     // Handle connection events
     mongoose.connection.on('connected', () => {
-      console.log('Mongoose connected to in-memory MongoDB');
+      console.log('Mongoose connected to MongoDB');
     });
 
     mongoose.connection.on('error', (err) => {
@@ -34,7 +29,7 @@ const connectDB = async () => {
       console.log('Mongoose disconnected');
     });
 
-    console.log('Connected to in-memory MongoDB successfully');
+    console.log('Connected to MongoDB successfully');
     return true;
   } catch (error) {
     console.error('Database connection error:', error);
@@ -48,11 +43,6 @@ const disconnectDB = async () => {
     if (mongoose.connection.readyState !== 0) {
       await mongoose.disconnect();
       console.log('Disconnected from MongoDB');
-    }
-    
-    if (mongoServer) {
-      await mongoServer.stop();
-      console.log('Stopped in-memory MongoDB server');
     }
   } catch (error) {
     console.error('Error disconnecting from database:', error);

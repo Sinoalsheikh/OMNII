@@ -17,47 +17,14 @@ router.get('/', async (req, res) => {
 // Validation middleware
 const validateAgent = (req, res, next) => {
   const errors = [];
-  const { aiModel, skills, communication } = req.body;
+  const { name, traits, purpose } = req.body;
 
-  // Validate AI Model
-  if (aiModel) {
-    if (!aiModel.type) {
-      errors.push('AI model type is required');
-    }
-    if (aiModel.capabilities) {
-      aiModel.capabilities.forEach((cap, index) => {
-        if (!cap.name) errors.push(`Capability ${index + 1} name is required`);
-        if (!cap.description) errors.push(`Capability ${index + 1} description is required`);
-      });
-    }
-    if (aiModel.knowledgeBase) {
-      aiModel.knowledgeBase.forEach((kb, index) => {
-        if (!kb.name) errors.push(`Knowledge base ${index + 1} name is required`);
-        if (!kb.category) errors.push(`Knowledge base ${index + 1} category is required`);
-      });
-    }
+  if (!name) errors.push('Name is required');
+  if (!traits) errors.push('Traits is required');
+  if (!['friendly', 'professional', 'casual'].includes(traits)) {
+    errors.push('Traits must be one of: friendly, professional, casual');
   }
-
-  // Validate Skills
-  if (skills) {
-    skills.forEach((skill, index) => {
-      if (!skill.name) errors.push(`Skill ${index + 1} name is required`);
-      if (!skill.category) errors.push(`Skill ${index + 1} category is required`);
-      if (skill.proficiency < 0 || skill.proficiency > 100) {
-        errors.push(`Skill ${index + 1} proficiency must be between 0 and 100`);
-      }
-    });
-  }
-
-  // Validate Communication Channels
-  if (communication?.channels) {
-    communication.channels.forEach((channel, index) => {
-      if (!channel.type) errors.push(`Channel ${index + 1} type is required`);
-      if (!['chat', 'email', 'voice', 'video', 'sms'].includes(channel.type)) {
-        errors.push(`Channel ${index + 1} type must be one of: chat, email, voice, video, sms`);
-      }
-    });
-  }
+  if (!purpose) errors.push('Purpose is required');
 
   if (errors.length > 0) {
     return res.status(400).json({ errors });
@@ -71,32 +38,19 @@ router.post('/', validateAgent, async (req, res) => {
   try {
     const agentData = {
       ...req.body,
-      owner: req.user.userId
+      owner: req.user.userId,
+      aiModel: 'gpt-3.5-turbo' // Default model
     };
 
-    // Initialize agent with service
-    const initializedAgent = await agentService.initializeAgent(agentData);
-    
-    // Create agent in database
-    const agent = new Agent(initializedAgent);
+    const agent = new Agent(agentData);
     await agent.save();
 
-    // Return response with limitations warning if applicable
-    const response = {
-      message: 'Agent created successfully',
+    res.status(201).json({
+      message: 'Chatbot created successfully',
       agent
-    };
-
-    if (initializedAgent.limitations) {
-      response.warning = {
-        message: 'Agent created with limited functionality',
-        details: initializedAgent.limitations
-      };
-    }
-
-    res.status(201).json(response);
+    });
   } catch (error) {
-    console.error('Error creating agent:', error);
+    console.error('Error creating chatbot:', error);
     res.status(400).json({ error: error.message });
   }
 });
@@ -106,11 +60,11 @@ router.get('/:id', async (req, res) => {
   try {
     const agent = await Agent.findOne({ _id: req.params.id, owner: req.user.userId });
     if (!agent) {
-      return res.status(404).json({ error: 'Agent not found' });
+      return res.status(404).json({ error: 'Chatbot not found' });
     }
     res.json(agent);
   } catch (error) {
-    console.error('Error fetching agent:', error);
+    console.error('Error fetching chatbot:', error);
     res.status(500).json({ error: error.message });
   }
 });
@@ -118,37 +72,22 @@ router.get('/:id', async (req, res) => {
 // Update agent
 router.put('/:id', validateAgent, async (req, res) => {
   try {
-    const agent = await Agent.findOne({ _id: req.params.id, owner: req.user.userId });
+    const agent = await Agent.findOneAndUpdate(
+      { _id: req.params.id, owner: req.user.userId },
+      { ...req.body },
+      { new: true, runValidators: true }
+    );
+
     if (!agent) {
-      return res.status(404).json({ error: 'Agent not found' });
+      return res.status(404).json({ error: 'Chatbot not found' });
     }
 
-    // Initialize updated agent data
-    const updatedData = await agentService.initializeAgent({
-      ...agent.toObject(),
-      ...req.body
-    });
-
-    // Update agent
-    Object.assign(agent, updatedData);
-    await agent.save();
-
-    // Return response with limitations warning if applicable
-    const response = {
-      message: 'Agent updated successfully',
+    res.json({
+      message: 'Chatbot updated successfully',
       agent
-    };
-
-    if (updatedData.limitations) {
-      response.warning = {
-        message: 'Agent updated with limited functionality',
-        details: updatedData.limitations
-      };
-    }
-
-    res.json(response);
+    });
   } catch (error) {
-    console.error('Error updating agent:', error);
+    console.error('Error updating chatbot:', error);
     res.status(400).json({ error: error.message });
   }
 });
@@ -158,11 +97,11 @@ router.delete('/:id', async (req, res) => {
   try {
     const agent = await Agent.findOneAndDelete({ _id: req.params.id, owner: req.user.userId });
     if (!agent) {
-      return res.status(404).json({ error: 'Agent not found' });
+      return res.status(404).json({ error: 'Chatbot not found' });
     }
-    res.json({ message: 'Agent deleted successfully' });
+    res.json({ message: 'Chatbot deleted successfully' });
   } catch (error) {
-    console.error('Error deleting agent:', error);
+    console.error('Error deleting chatbot:', error);
     res.status(500).json({ error: error.message });
   }
 });
@@ -174,18 +113,16 @@ router.post('/:id/interact', async (req, res) => {
     const agent = await Agent.findOne({ _id: req.params.id, owner: req.user.userId });
     
     if (!agent) {
-      return res.status(404).json({ error: 'Agent not found' });
+      return res.status(404).json({ error: 'Chatbot not found' });
     }
 
-    const response = await agentService.processMessage(message, agent);
-    
-    // Add warning if in fallback mode
-    if (response.mode === 'fallback') {
-      response.warning = {
-        message: 'Operating in fallback mode with limited AI capabilities',
-        reason: 'OpenAI service not available'
-      };
-    }
+    // Use agentService to process the message
+    const response = await agentService.processMessage(message, {
+      name: agent.name,
+      traits: agent.traits,
+      purpose: agent.purpose,
+      aiModel: agent.aiModel
+    });
 
     res.json(response);
   } catch (error) {

@@ -18,8 +18,6 @@ import MoreVertIcon from '@mui/icons-material/MoreVert';
 import ChatIcon from '@mui/icons-material/Chat';
 import DeleteIcon from '@mui/icons-material/Delete';
 import EditIcon from '@mui/icons-material/Edit';
-import SchoolIcon from '@mui/icons-material/School';
-import PsychologyIcon from '@mui/icons-material/Psychology';
 
 const AgentCard = ({ agent, onDelete }) => {
   const navigate = useNavigate();
@@ -44,72 +42,85 @@ const AgentCard = ({ agent, onDelete }) => {
     navigate(`/chat/${agent._id}`);
   };
 
+  const getTraitColor = (trait) => {
+    switch (trait) {
+      case 'friendly':
+        return 'success';
+      case 'professional':
+        return 'primary';
+      case 'casual':
+        return 'secondary';
+      default:
+        return 'default';
+    }
+  };
+
   return (
-    <Card sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
+    <Card sx={{ 
+      height: '100%', 
+      display: 'flex', 
+      flexDirection: 'column',
+      transition: 'transform 0.2s, box-shadow 0.2s',
+      '&:hover': {
+        transform: 'translateY(-4px)',
+        boxShadow: 3
+      }
+    }}>
       <CardContent sx={{ flexGrow: 1 }}>
         <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
-          <Avatar sx={{ bgcolor: 'primary.main', mr: 2 }}>
+          <Avatar sx={{ 
+            bgcolor: 'primary.main', 
+            mr: 2,
+            width: 48,
+            height: 48
+          }}>
             <SmartToyIcon />
           </Avatar>
           <Box sx={{ flexGrow: 1 }}>
             <Typography variant="h6" component="div">
               {agent.name}
             </Typography>
-            <Typography variant="body2" color="text.secondary">
-              {agent.role}
-            </Typography>
+            <Chip 
+              label={agent.traits}
+              size="small"
+              color={getTraitColor(agent.traits)}
+              sx={{ mt: 0.5 }}
+            />
           </Box>
           <IconButton 
             size="small" 
             onClick={handleMenuClick}
-            aria-label="agent options"
+            aria-label="chatbot options"
           >
             <MoreVertIcon />
           </IconButton>
         </Box>
 
-        <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-          {agent.description}
+        <Typography 
+          variant="body2" 
+          color="text.secondary" 
+          sx={{ 
+            mb: 2,
+            display: '-webkit-box',
+            WebkitLineClamp: 3,
+            WebkitBoxOrient: 'vertical',
+            overflow: 'hidden',
+            textOverflow: 'ellipsis'
+          }}
+        >
+          {agent.purpose}
         </Typography>
-
-        <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap', mb: 2 }}>
-          <Chip 
-            label={agent.personality?.trait || 'Professional'} 
-            size="small" 
-            color="primary" 
-            variant="outlined"
-          />
-          <Chip 
-            label={agent.personality?.communicationStyle || 'Clear'} 
-            size="small" 
-            color="primary" 
-            variant="outlined"
-          />
-        </Box>
-
-        {agent.limitations && (
-          <Typography variant="caption" color="warning.main">
-            Limited functionality: {agent.limitations.reason}
-          </Typography>
-        )}
       </CardContent>
 
-      <CardActions sx={{ justifyContent: 'flex-end', p: 2, gap: 1 }}>
-        <Button
-          variant="outlined"
-          color="secondary"
-          startIcon={<SchoolIcon />}
-          onClick={() => navigate(`/agent/${agent._id}/training`)}
-        >
-          Train
-        </Button>
+      <CardActions sx={{ justifyContent: 'flex-end', p: 2 }}>
         <Button
           variant="contained"
           color="primary"
           startIcon={<ChatIcon />}
           onClick={handleChat}
+          fullWidth
         >
-          Chat
+          Start Chat
         </Button>
       </CardActions>
 
@@ -118,12 +129,6 @@ const AgentCard = ({ agent, onDelete }) => {
         open={Boolean(anchorEl)}
         onClose={handleMenuClose}
       >
-        <MenuItem onClick={() => {
-          handleMenuClose();
-          navigate(`/agent/${agent._id}/training`);
-        }}>
-          <PsychologyIcon fontSize="small" sx={{ mr: 1 }} /> Training
-        </MenuItem>
         <MenuItem onClick={handleMenuClose}>
           <EditIcon fontSize="small" sx={{ mr: 1 }} /> Edit
         </MenuItem>
