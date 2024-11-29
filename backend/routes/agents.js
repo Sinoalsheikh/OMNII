@@ -117,13 +117,22 @@ router.post('/:id/interact', async (req, res) => {
     }
 
     // Use agentService to process the message
-    const response = await agentService.processMessage(message, {
+console.log('Incoming message:', message);
+console.log('Agent configuration:', {
       name: agent.name,
       traits: agent.traits,
       purpose: agent.purpose,
       aiModel: agent.aiModel
     });
 
+    const response = await agentService.processMessage(agent._id, {
+      message,
+      name: agent.name,
+      traits: agent.traits,
+      purpose: agent.purpose,
+      aiModel: agent.aiModel
+    });
+    
     res.json(response);
   } catch (error) {
     console.error('Error processing message:', error);
